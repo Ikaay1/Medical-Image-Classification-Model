@@ -1,13 +1,10 @@
 # Evaluating Uncertainty Estimation Methods for Detecting Incorrect Predictions in Medical Image Classification
 
-Senior Seminar project — Ikechukwu Mgbemele, Fisk University.
+Senior Seminar project - Ikechukwu Mgbemele, Fisk University.
 
 **Research question.** How effectively can uncertainty estimation methods
 identify incorrect predictions when a medical image classifier is tested on
 degraded images that differ from its training data?
-
-This repository is built up across five progress reports. **Only Milestone 1 is
-implemented so far.**
 
 ---
 
@@ -37,7 +34,7 @@ Trained 40 epochs (~165 min, Apple M4 GPU). Best epoch 34 by validation loss;
 | Mean max softmax (confidence) | 0.9964 | 0.9697 |
 
 **The two rows that motivate the whole project.** On validation, mean
-confidence (0.9964) and accuracy (0.9945) agree almost exactly — the model is
+confidence (0.9964) and accuracy (0.9945) agree almost exactly - the model is
 well calibrated in-distribution. On the test split, which comes from a
 different hospital, accuracy falls to 0.9348 while confidence stays at 0.9697.
 The model is **overconfident by about 3.5 points** on data that is only mildly
@@ -53,14 +50,14 @@ Hardest classes on the clean test set:
 
 The errors are structured, not random. Cancer-associated stroma is the weakest
 class: 19% of it is predicted as debris and 12% as smooth muscle, which is why
-debris shows perfect recall but poor precision — the model over-predicts it.
+debris shows perfect recall but poor precision - the model over-predicts it.
 Separately, 6% of normal colon mucosa is misread as adenocarcinoma epithelium.
 This gives the later milestones real, clinically meaningful errors to try to
 detect, rather than uniform noise.
 
 ---
 
-## Milestone 2 results — degraded test images
+## Milestone 2 results - degraded test images
 
 Three corruptions, five severities each, applied to the **test split only**.
 Severity 0 is the clean image and reproduces the Milestone 1 logits exactly.
@@ -75,15 +72,15 @@ collapsed to random guessing is not an interesting test of whether uncertainty
 estimates can flag its mistakes.
 
 This mattered more than expected. The usable range is far narrower than round
-numbers would suggest — **this model loses most of its accuracy between sigma
+numbers would suggest - **this model loses most of its accuracy between sigma
 0.01 and 0.05 of noise**. An initial guess of `[0.02, 0.05, 0.09, 0.14, 0.20]`
 would have put severities 3, 4 and 5 all at or below chance, producing three
 identical, useless data points.
 
 The sweep also found that **accuracy is not monotonic** in corruption strength.
-Under heavy contrast reduction accuracy falls to 0.0036 — far *below* chance,
+Under heavy contrast reduction accuracy falls to 0.0036 - far *below* chance,
 meaning the model is not guessing randomly but confidently predicting one wrong
-class — and then rises again as the image collapses to flat grey. Selecting
+class - and then rises again as the image collapses to flat grey. Selecting
 levels by "nearest accuracy to target" therefore picked absurd values, including
 the identity transform. The picker instead walks forward through the grid and
 takes the first value to cross each target, which guarantees levels that are
@@ -116,7 +113,7 @@ Figures: `degradation_accuracy.png`, `degradation_confidence_gap.png`,
 
 **Confidence does not track accuracy.** Under noise, accuracy falls 61 points
 (0.935 to 0.324) while mean confidence falls only 9 points (0.970 to 0.878).
-The overconfidence gap grows from +0.035 on clean data to **+0.554** — the model
+The overconfidence gap grows from +0.035 on clean data to **+0.554** - the model
 reports 88% confidence while being right 32% of the time.
 
 **Confidence can rise while accuracy falls.** From noise severity 4 to 5,
@@ -129,18 +126,18 @@ move in opposite directions.
 confidence on wrong predictions *rises* to roughly 0.81-0.84 while confidence on
 correct predictions falls. The signal that separates right from wrong is
 weakening exactly where it is needed, which predicts that plain softmax
-confidence will lose discriminative power under shift — the hypothesis
+confidence will lose discriminative power under shift - the hypothesis
 Milestone 4 tests formally with AUROC.
 
 **Confidently wrong predictions multiply.** Errors made above 99% confidence go
-from 96 on clean data to 1,644 under noise severity 5 — a 17-fold increase, and
+from 96 on clean data to 1,644 under noise severity 5 - a 17-fold increase, and
 34% of all errors at that severity.
 
 **The corruption type matters.** Noise and blur both drive the share of errors
 made above 99% confidence *up* to around 34%. Contrast drives it *down* to 8%:
 washing the image out makes the model uncertain in a way that noise and blur do
 not. Any claim that "the model gets overconfident under shift" is therefore too
-coarse — the failure mode depends on which corruption is applied.
+coarse - the failure mode depends on which corruption is applied.
 
 **The corruptions are visually mild.** See `degradation_examples.png`. At noise
 severity 5 the tissue structure is still clearly readable to a human eye, and
@@ -159,23 +156,23 @@ corruption moves the image (RMSE against the clean image, full test set):
 Noise does roughly the same damage as contrast while changing the pixels only
 *two thirds* as much, making it about 1.9x more damaging per unit of pixel
 change than blur. The model is disproportionately sensitive to high-frequency
-perturbation rather than to overall image distance — which is consistent with a
+perturbation rather than to overall image distance - which is consistent with a
 CNN relying on fine texture cues that noise destroys and blur merely softens.
 
 
-## Milestone 3 results — uncertainty estimation methods
+## Milestone 3 results - uncertainty estimation methods
 
 Three methods, each producing a predictive distribution for all 18 conditions.
 
 | Method | What it does | Can it change the prediction? |
 |---|---|---|
-| Softmax confidence | unmodified network output | — (it is the prediction) |
-| Temperature scaling | divide logits by a scalar T | **No** — monotonic in the logits |
+| Softmax confidence | unmodified network output | - (it is the prediction) |
+| Temperature scaling | divide logits by a scalar T | **No** - monotonic in the logits |
 | Monte Carlo Dropout | average 30 stochastic forward passes | **Yes** |
 
 **T = 1.2759**, fitted by minimising NLL on half of the validation split and
 reported on the other half. On clean validation the model was already close to
-calibrated (gap +0.0024), so T had almost nothing to correct in-distribution —
+calibrated (gap +0.0024), so T had almost nothing to correct in-distribution -
 and that is exactly the honest deployment setting: you can only calibrate on
 data you have, which is clean.
 
@@ -203,7 +200,7 @@ being right 37% of the time. Recalibration reduces overconfidence; it does not
 make the model know when it is wrong.
 
 **No method wins everywhere.** MC Dropout dominates under noise at every
-severity. Under blur and contrast the ranking flips with severity — temperature
+severity. Under blur and contrast the ranking flips with severity - temperature
 scaling is better at s2–s3, MC Dropout at s4–s5. Any claim that one method is
 simply "best" would be an artifact of which corruption was tested.
 
@@ -219,7 +216,7 @@ with severity under all three corruptions (0.031 clean → 0.122 noise, 0.124
 blur, 0.136 contrast) without a single reversal. Unlike confidence, which can
 rise while accuracy falls, disagreement between dropout sub-networks tracks
 corruption consistently. That makes it a candidate *shift detector* even where
-it fails as an error detector — worth testing properly in Milestone 4.
+it fails as an error detector - worth testing properly in Milestone 4.
 
 **A trap in the separation metric.** Temperature scaling appears to improve the
 gap between confidence-when-right and confidence-when-wrong (0.207 → 0.240 on
@@ -243,14 +240,14 @@ masks.
 Aggregate conclusions are unaffected, but this sets a floor on what counts as a
 real difference. MC Dropout's advantage under noise (+3.5 to +6.1 accuracy
 points) and its deficit under contrast s3 (-3.1 points) are an order of
-magnitude above the noise floor. Differences of around a point — blur s3
-(-0.1), contrast s4 (+0.8), clean (+0.7) — are at or near it and should be
+magnitude above the noise floor. Differences of around a point - blur s3
+(-0.1), contrast s4 (+0.8), clean (+0.7) - are at or near it and should be
 read as ties. The deterministic methods have no such caveat.
 
 ### The oracle upper bound
 
 An oracle temperature was also fitted separately on each condition. It is not
-deployable — it needs labelled data from the corruption being faced — but it
+deployable - it needs labelled data from the corruption being faced - but it
 bounds what temperature scaling could ever achieve:
 
 | | clean | noise s3 | noise s5 |
@@ -259,7 +256,7 @@ bounds what temperature scaling could ever achieve:
 | Oracle gap | −0.004 | +0.041 | **+0.109** |
 
 Two things follow. First, the oracle T for the *clean* test set is 1.89 against
-the 1.28 fitted on validation — the cross-hospital shift alone already makes
+the 1.28 fitted on validation - the cross-hospital shift alone already makes
 the validation-fitted temperature too small, before any artificial corruption.
 Second, even the oracle cannot reach zero gap at high severity: a single scalar
 is not enough to recalibrate a badly shifted model even when fitted directly on
@@ -268,8 +265,8 @@ the shift.
 ### What Milestone 4 inherits
 
 54 saved predictive distributions (3 methods x 18 conditions), each a full
-probability matrix rather than a summary, so any uncertainty score — maximum
-probability, entropy, margin, mutual information — can be computed without
+probability matrix rather than a summary, so any uncertainty score - maximum
+probability, entropy, margin, mutual information - can be computed without
 re-running anything. Every method is scored on byte-identical inputs.
 
 Milestone 4 should compute, per method per condition:
@@ -285,7 +282,7 @@ Milestone 4 should compute, per method per condition:
 
 Two things to be careful about. AUROC is computed within a single condition, so
 it measures ranking at a fixed corruption and will not by itself reveal that
-confidence is globally too high — that is what ECE is for; the two answer
+confidence is globally too high - that is what ECE is for; the two answer
 different questions and both are needed. And when comparing methods, note that
 MC Dropout changes the predictions themselves, so each method is being scored
 against its own error set rather than a shared one.
@@ -382,7 +379,7 @@ cancer histology.
 | test  |  7,180 |
 
 Downloaded directly from Zenodo by `src/data.py`. The official `medmnist` pip
-package is deliberately **not** a dependency — it pulls in PyTorch and
+package is deliberately **not** a dependency - it pulls in PyTorch and
 torchvision (~2.5 GB) that this TensorFlow project has no use for. The archive
 is a plain `.npz`.
 
