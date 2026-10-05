@@ -27,3 +27,7 @@ SKILL.md
 
 # Intermediate used when building the report PDF
 report/midterm_embedded.html
+report/node_modules/
+report/package-lock.json
+report/package.json
+report/doc.json
