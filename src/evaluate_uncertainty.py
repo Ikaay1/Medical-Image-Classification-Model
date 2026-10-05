@@ -66,9 +66,19 @@ def summarise(probs: np.ndarray, labels: np.ndarray) -> dict:
         "confidence_minus_accuracy": float(confidence.mean() - correct.mean()),
         "mean_confidence_correct": conf_ok,
         "mean_confidence_incorrect": conf_bad,
-        # How far apart confidence is for right vs wrong answers. This is the
-        # quantity that determines whether a confidence threshold can flag
-        # errors at all; Milestone 4 turns it into an AUROC.
+        # How far apart confidence is for right vs wrong answers.
+        #
+        # READ THIS BEFORE COMPARING METHODS ON THIS NUMBER. It is a difference
+        # of means, so a monotonic squashing of the confidences can change it
+        # without changing which predictions are flagged first. Temperature
+        # scaling does exactly that: measured here, it raises separation from
+        # 0.207 to 0.240 on clean data while Spearman correlation with the
+        # unscaled confidences is 0.9994 and error-detection AUROC moves by
+        # under 0.005. The apparent gain is an artifact, not better detection.
+        #
+        # Only MC Dropout can genuinely reorder predictions, because averaging
+        # over sub-networks is not a monotonic transform of the original
+        # confidence. Milestone 4's AUROC is the metric that tells these apart.
         "confidence_separation": conf_ok - conf_bad,
         "mean_entropy": float(entropy.mean()),
         "n_errors": int((~correct).sum()),

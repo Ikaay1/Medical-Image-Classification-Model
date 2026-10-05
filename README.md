@@ -17,7 +17,7 @@ implemented so far.**
 |---|-----------|--------|
 | 1 | Environment, data pipeline, baseline classifier, clean-test evaluation | **Done** (results below) |
 | 2 | Image degradations (Gaussian noise, blur, contrast) + accuracy under shift | **Done** (results below) |
-| 3 | Uncertainty methods: softmax confidence, temperature scaling, MC Dropout | Not started |
+| 3 | Uncertainty methods: softmax confidence, temperature scaling, MC Dropout | **Done** (results below) |
 | 4 | Misclassification-detection metrics (AUROC, calibration error) | Not started |
 | 5 | Final comparison, figures, written analysis | Not started |
 
@@ -162,17 +162,117 @@ change than blur. The model is disproportionately sensitive to high-frequency
 perturbation rather than to overall image distance — which is consistent with a
 CNN relying on fine texture cues that noise destroys and blur merely softens.
 
-### What Milestone 3 inherits
 
-The 18 saved logit files are the handover. Two enabling decisions already hold:
-the model outputs raw logits, so temperature scaling needs no architectural
-change, and it was trained with dropout, so Monte Carlo Dropout runs without
-retraining.
+## Milestone 3 results — uncertainty estimation methods
 
-Two constraints to respect: temperature must be fitted on a calibration split
-held out from validation, never on test; and MC Dropout needs many stochastic
-forward passes per image, so unlike the deterministic methods it cannot reuse
-the saved logits and must re-run the network across all 18 conditions.
+Three methods, each producing a predictive distribution for all 18 conditions.
+
+| Method | What it does | Can it change the prediction? |
+|---|---|---|
+| Softmax confidence | unmodified network output | — (it is the prediction) |
+| Temperature scaling | divide logits by a scalar T | **No** — monotonic in the logits |
+| Monte Carlo Dropout | average 30 stochastic forward passes | **Yes** |
+
+**T = 1.2759**, fitted by minimising NLL on half of the validation split and
+reported on the other half. On clean validation the model was already close to
+calibrated (gap +0.0024), so T had almost nothing to correct in-distribution —
+and that is exactly the honest deployment setting: you can only calibrate on
+data you have, which is clean.
+
+### Headline numbers (overconfidence gap = mean confidence − accuracy)
+
+| Corruption | Method | s0 | s1 | s2 | s3 | s4 | s5 |
+|---|---|---:|---:|---:|---:|---:|---:|
+| Noise | softmax | +0.035 | +0.115 | +0.191 | +0.317 | +0.454 | +0.554 |
+| | temperature | +0.025 | +0.095 | +0.163 | +0.285 | +0.421 | +0.521 |
+| | MC Dropout | +0.019 | **+0.048** | **+0.115** | **+0.212** | **+0.331** | **+0.439** |
+| Blur | softmax | +0.035 | +0.112 | +0.202 | +0.264 | +0.355 | +0.483 |
+| | temperature | +0.025 | +0.090 | **+0.170** | **+0.229** | +0.318 | +0.441 |
+| | MC Dropout | +0.020 | **+0.085** | +0.183 | +0.231 | **+0.286** | **+0.403** |
+| Contrast | softmax | +0.035 | +0.158 | +0.207 | +0.278 | +0.376 | +0.490 |
+| | temperature | +0.025 | +0.136 | **+0.180** | **+0.237** | **+0.329** | +0.435 |
+| | MC Dropout | +0.019 | **+0.131** | +0.200 | +0.270 | +0.330 | **+0.418** |
+
+Figures: `uncertainty_confidence.png`, `uncertainty_separation.png`.
+
+### What the numbers show
+
+**Every method improves calibration, and none of them comes close to fixing
+it.** The best method at noise severity 5 still reports 77% confidence while
+being right 37% of the time. Recalibration reduces overconfidence; it does not
+make the model know when it is wrong.
+
+**No method wins everywhere.** MC Dropout dominates under noise at every
+severity. Under blur and contrast the ranking flips with severity — temperature
+scaling is better at s2–s3, MC Dropout at s4–s5. Any claim that one method is
+simply "best" would be an artifact of which corruption was tested.
+
+**MC Dropout changes accuracy; temperature scaling cannot.** Verified
+empirically: temperature scaling changed **0** of 7,180 predictions across all
+18 conditions, exactly as the mathematics requires. MC Dropout raises accuracy
+under noise (0.324 → 0.370 at s5, and +3.5 to +6.1 points at every severity)
+but *lowers* it under blur s2 (0.691 → 0.679) and contrast s3 (0.578 → 0.547).
+Averaging over sub-networks is not free.
+
+**Mutual information is the one quantity that behaves.** It rises monotonically
+with severity under all three corruptions (0.031 clean → 0.122 noise, 0.124
+blur, 0.136 contrast) without a single reversal. Unlike confidence, which can
+rise while accuracy falls, disagreement between dropout sub-networks tracks
+corruption consistently. That makes it a candidate *shift detector* even where
+it fails as an error detector — worth testing properly in Milestone 4.
+
+**A trap in the separation metric.** Temperature scaling appears to improve the
+gap between confidence-when-right and confidence-when-wrong (0.207 → 0.240 on
+clean data). This is an artifact. Temperature scaling is monotonic, so it
+barely reorders predictions: measured Spearman correlation with the unscaled
+confidences is 0.9994, and error-detection AUROC moves by less than 0.005.
+It fixes *calibration* (how large the numbers are) but cannot improve
+*discrimination* (which predictions get flagged first). Only MC Dropout can
+genuinely reorder. Milestone 4's AUROC is the metric that separates these, and
+this prediction is now on record before that measurement is taken.
+
+### The oracle upper bound
+
+An oracle temperature was also fitted separately on each condition. It is not
+deployable — it needs labelled data from the corruption being faced — but it
+bounds what temperature scaling could ever achieve:
+
+| | clean | noise s3 | noise s5 |
+|---|---:|---:|---:|
+| Oracle T* | 1.89 | 3.64 | 5.67 |
+| Oracle gap | −0.004 | +0.041 | **+0.109** |
+
+Two things follow. First, the oracle T for the *clean* test set is 1.89 against
+the 1.28 fitted on validation — the cross-hospital shift alone already makes
+the validation-fitted temperature too small, before any artificial corruption.
+Second, even the oracle cannot reach zero gap at high severity: a single scalar
+is not enough to recalibrate a badly shifted model even when fitted directly on
+the shift.
+
+### What Milestone 4 inherits
+
+54 saved predictive distributions (3 methods x 18 conditions), each a full
+probability matrix rather than a summary, so any uncertainty score — maximum
+probability, entropy, margin, mutual information — can be computed without
+re-running anything. Every method is scored on byte-identical inputs.
+
+Milestone 4 should compute, per method per condition:
+
+- **AUROC for misclassification detection**, the headline metric. This is the
+  measurement that will confirm or refute the prediction recorded above: that
+  temperature scaling matches plain softmax almost exactly, because it cannot
+  reorder predictions.
+- **Expected calibration error**, with reliability diagrams.
+- **Risk-coverage / selective prediction**: if the model abstains on its least
+  confident x%, how much does accuracy recover? This is the form a clinical
+  workflow would actually use.
+
+Two things to be careful about. AUROC is computed within a single condition, so
+it measures ranking at a fixed corruption and will not by itself reveal that
+confidence is globally too high — that is what ECE is for; the two answer
+different questions and both are needed. And when comparing methods, note that
+MC Dropout changes the predictions themselves, so each method is being scored
+against its own error set rather than a shared one.
 
 ---
 
@@ -215,6 +315,16 @@ python3.11 -m venv .venv
 
 # Evaluate across 3 corruptions x 5 severities + clean (~5 min)
 .venv/bin/python -m src.evaluate_degraded
+
+# --- Milestone 3 ---
+
+# Fit the temperature on held-out validation data (instant)
+.venv/bin/python -m src.fit_temperature
+
+# All three uncertainty methods over all 18 conditions (~40 min; MC Dropout
+# runs 30 stochastic passes per condition)
+.venv/bin/python -m src.evaluate_uncertainty
+.venv/bin/python -m src.evaluate_uncertainty --mc-samples 5   # quick trial
 ```
 
 Artifacts land in `outputs/` (git-ignored):
@@ -234,6 +344,12 @@ outputs/figures/severity_calibration.png
 outputs/figures/degradation_accuracy.png
 outputs/figures/degradation_confidence_gap.png
 outputs/figures/degradation_examples.png
+
+outputs/metrics/temperature.json               fitted T + before/after stats
+outputs/metrics/uncertainty_evaluation.json    all method x condition metrics
+outputs/predictions/uncertainty/*.npz          54 files (3 methods x 18 conditions)
+outputs/figures/uncertainty_confidence.png
+outputs/figures/uncertainty_separation.png
 ```
 
 ---
@@ -356,4 +472,7 @@ src/evaluate.py            clean-split metrics, logits, confusion matrix
 src/degradations.py        the three corruptions + severity registry
 src/calibrate_severity.py  empirical choice of severity levels
 src/evaluate_degraded.py   metrics, logits and figures under degradation
+src/uncertainty.py         the three methods + MC Dropout model surgery
+src/fit_temperature.py     fits T on a held-out half of validation
+src/evaluate_uncertainty.py  all methods over all conditions
 ```
