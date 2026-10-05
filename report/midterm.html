@@ -1,0 +1,697 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Midterm Project Report</title>
+<style>
+  @page { size: letter; margin: 0.85in 0.9in; }
+  html { font-size: 10.5pt; }
+  body { font-family: "Charter","Georgia",serif; line-height: 1.45; color: #111; margin: 0; }
+  h1 { font-size: 17pt; margin: 0 0 .15em; line-height: 1.2; }
+  h2 { font-size: 12.5pt; margin: 1.5em 0 .45em; padding-bottom: .18em;
+       border-bottom: 1.5px solid #333; page-break-after: avoid; }
+  h3 { font-size: 11pt; margin: 1.1em 0 .3em; page-break-after: avoid; }
+  h4 { font-size: 10.5pt; margin: .9em 0 .25em; font-style: italic; font-weight: 600;
+       page-break-after: avoid; }
+  p { margin: .45em 0; text-align: justify; }
+  ul, ol { margin: .4em 0 .5em; padding-left: 1.3em; }
+  li { margin: .2em 0; }
+  table { border-collapse: collapse; width: 100%; margin: .7em 0; font-size: 8.8pt;
+          page-break-inside: avoid; }
+  th, td { border: 1px solid #bbb; padding: 3.5px 6px; text-align: left; }
+  th { background: #eee; font-weight: 600; }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+  figure { margin: .9em 0 1.1em; page-break-inside: avoid; text-align: center; }
+  figure img { width: 100%; border: 1px solid #ccc; }
+  figcaption { font-size: 8.6pt; color: #333; margin-top: .35em; text-align: left; }
+  code { font-family: "SF Mono","Menlo",monospace; font-size: 8.8pt; background: #f2f2f2;
+         padding: .5px 3px; border-radius: 2px; }
+  .head { border-bottom: 2.5px solid #222; padding-bottom: .7em; margin-bottom: 1.2em; }
+  .meta { font-size: 10pt; color: #333; margin-top: .5em; line-height: 1.5; }
+  .kv { font-size: 9.5pt; }
+  .callout { background: #f6f6f4; border-left: 3px solid #666; padding: .5em .8em;
+             margin: .7em 0; page-break-inside: avoid; }
+  .done { color: #1a6b2a; font-weight: 600; }
+  .prog { color: #8a6100; font-weight: 600; }
+  .todo { color: #666; }
+  .pb { page-break-before: always; }
+</style>
+
+<div class="head">
+  <h1>Midterm Project Report</h1>
+  <div class="meta">
+    <strong>Evaluating Uncertainty Estimation Methods for Detecting Incorrect
+    Predictions in Medical Image Classification</strong><br>
+    Ikechukwu Mgbemele &middot; Senior Seminar I &middot; Fisk University<br>
+    Reporting period: Weeks 1&ndash;7 &middot; Submitted 5 October 2026
+  </div>
+</div>
+
+<h2>1. Project Overview</h2>
+
+<p><strong>Problem.</strong> A medical image classifier can perform well on the kind of
+images it was trained on and still fail on images that differ from them &mdash; images
+with more noise, blur, or weaker contrast. The dangerous part is not that the model is
+wrong. It is that the model is often wrong <em>and confident</em>, giving a clinician no
+signal that the prediction should be questioned.</p>
+
+<p><strong>Research question.</strong> How effectively can uncertainty estimation methods
+identify incorrect predictions when a medical image classifier is tested on degraded
+images that differ from its training data?</p>
+
+<p><strong>Objectives.</strong></p>
+<ol>
+  <li>Train a medical image classifier and establish its accuracy on clean data.</li>
+  <li>Degrade the test images in controlled, gradable ways and measure how accuracy and
+      confidence respond.</li>
+  <li>Implement three uncertainty estimation methods: softmax confidence, temperature
+      scaling, and Monte Carlo Dropout.</li>
+  <li>Compare how well each method identifies predictions that are actually wrong, using
+      AUROC and calibration error.</li>
+  <li>Determine which method gives the most reliable warning, and under which conditions.</li>
+</ol>
+
+<p><strong>Expected final product.</strong> A trained classifier, three implemented
+uncertainty methods, experiments on clean and degraded images, tables and figures of
+results, and a written analysis of which method is most effective at identifying
+unreliable predictions.</p>
+
+<h2>2. Work Completed: Weeks 1&ndash;7</h2>
+
+<p>Work was organised into five milestones. <strong>Three are complete.</strong> Each
+produced running code, saved numerical results, and figures. The sections below describe
+what was built, what was measured, and what each contributes.</p>
+
+<table>
+  <tr><th>Milestone</th><th>Completed</th><th>Status</th></tr>
+  <tr><td>1 &mdash; Environment, data pipeline, baseline classifier, clean evaluation</td>
+      <td>14&ndash;15 Sep</td><td class="done">Complete</td></tr>
+  <tr><td>2 &mdash; Image degradations and behaviour under distribution shift</td>
+      <td>26 Sep</td><td class="done">Complete</td></tr>
+  <tr><td>3 &mdash; Three uncertainty estimation methods</td>
+      <td>5 Oct</td><td class="done">Complete</td></tr>
+  <tr><td>4 &mdash; Misclassification-detection metrics (AUROC, calibration error)</td>
+      <td>&mdash;</td><td class="todo">Not started</td></tr>
+  <tr><td>5 &mdash; Final comparison and written analysis</td>
+      <td>&mdash;</td><td class="todo">Not started</td></tr>
+</table>
+
+<h3>2.1 Tools and technologies</h3>
+
+<table>
+  <tr><th>Component</th><th>Choice</th><th>Why</th></tr>
+  <tr><td>Language</td><td>Python 3.11</td>
+      <td>TensorFlow publishes no wheels for the machine's default Python 3.14, and 3.12
+          removed <code>distutils</code>, which TensorFlow 2.18 imports</td></tr>
+  <tr><td>Framework</td><td>TensorFlow 2.18 / Keras 3</td><td>As committed in the proposal</td></tr>
+  <tr><td>GPU</td><td>tensorflow-metal 1.2.0 on Apple M4</td><td>3.3&times; speedup; 1.8 vs 5.9 min/epoch</td></tr>
+  <tr><td>Analysis</td><td>NumPy, SciPy, scikit-learn, Matplotlib</td>
+      <td>Gaussian filtering, temperature optimisation, metrics, figures</td></tr>
+  <tr><td>Dataset</td><td>PathMNIST 64&times;64 (MedMNIST v2)</td>
+      <td>Public, no credentials, 9-class, standard benchmark</td></tr>
+  <tr><td>Version control</td><td>Git</td><td>3 commits; source, figures and metrics tracked</td></tr>
+</table>
+
+<h3>2.2 Milestone 1 &mdash; Baseline classifier (Weeks 1&ndash;4)</h3>
+
+<p><strong>Dataset.</strong> PathMNIST: nine tissue classes from colorectal cancer
+histology slides &mdash; 89,996 training, 10,004 validation and 7,180 test images. I
+chose the <strong>64&times;64</strong> version over the default 28&times;28 because later
+milestones blur the test images, and at 28&times;28 there is too little spatial detail for
+blur to act as a gradual corruption. The archive is downloaded directly from Zenodo by
+<code>src/data.py</code>; I deliberately avoided the official <code>medmnist</code> package
+because it depends on PyTorch and torchvision, roughly 2.5&nbsp;GB this TensorFlow project
+does not need.</p>
+
+<p>One property of this dataset matters throughout the report: the <strong>test split comes
+from a different hospital</strong> than the training and validation splits. A mild
+distribution shift is therefore present before I add any artificial degradation.</p>
+
+<p><strong>Model.</strong> A VGG-style convolutional network with 1,244,009 parameters:
+four blocks of two 3&times;3 convolutions with batch normalisation and ReLU, each followed
+by max-pooling and dropout, with filter widths 32/64/128/256, then global average pooling,
+a 256-unit dense layer, and a linear output layer. Trained for 40 epochs (165 minutes),
+with Adam, early stopping and learning-rate reduction on validation loss. The best epoch
+by validation loss was epoch 34.</p>
+
+<p>Two architectural decisions were made specifically to enable later milestones:
+the network outputs <strong>raw logits rather than softmax probabilities</strong>, because
+temperature scaling operates on logits; and <strong>dropout is present from the start</strong>,
+because Monte Carlo Dropout requires a model genuinely trained with dropout and cannot be
+retrofitted without retraining.</p>
+
+<p><strong>Results on clean data.</strong></p>
+
+<table>
+  <tr><th>Metric</th><th class="n">Validation</th><th class="n">Test (different hospital)</th></tr>
+  <tr><td>Accuracy</td><td class="n">0.9945</td><td class="n">0.9348</td></tr>
+  <tr><td>Balanced accuracy</td><td class="n">0.9945</td><td class="n">0.9115</td></tr>
+  <tr><td>Macro F1</td><td class="n">0.9944</td><td class="n">0.9052</td></tr>
+  <tr><td>Macro AUROC (one-vs-rest)</td><td class="n">1.0000</td><td class="n">0.9950</td></tr>
+  <tr><td>Mean confidence</td><td class="n">0.9964</td><td class="n">0.9697</td></tr>
+</table>
+
+<div class="callout">
+<p><strong>The result that motivates the whole project.</strong> On validation, mean
+confidence (0.9964) and accuracy (0.9945) agree almost exactly &mdash; the model is well
+calibrated in-distribution. On the test split, accuracy falls to 0.9348 while confidence
+stays at 0.9697. The model is <strong>overconfident by about 3.5 points</strong> on data
+that is only mildly shifted. Of its 468 test errors, <strong>96 were made at over 99%
+confidence</strong> &mdash; cases a clinician would have no reason to double-check.</p>
+</div>
+
+<p>The errors are structured rather than random. Cancer-associated stroma is the weakest
+class at 0.582 recall, with 19% of it predicted as debris and 12% as smooth muscle; this is
+why debris shows perfect recall (1.000) but poor precision (0.644). Separately, 6% of normal
+colon mucosa is misread as adenocarcinoma epithelium.</p>
+
+<h3>2.3 Milestone 2 &mdash; Degradation study (Week 5)</h3>
+
+<p>I implemented three corruptions in <code>src/degradations.py</code>, applied to the
+<strong>test set only</strong> and never during training:</p>
+
+<table>
+  <tr><th>Corruption</th><th>Definition</th><th>What it models</th></tr>
+  <tr><td>Gaussian noise</td><td>add pixel-wise <em>N</em>(0, &sigma;)</td>
+      <td>sensor noise, fast or low-dose acquisition</td></tr>
+  <tr><td>Gaussian blur</td><td>convolve with a Gaussian of width &sigma; pixels</td>
+      <td>out-of-focus or lower-resolution scanner</td></tr>
+  <tr><td>Contrast reduction</td><td><em>x</em>' = (<em>x</em> &minus; mean) &times; factor + mean</td>
+      <td>washed-out or poorly stained slide</td></tr>
+</table>
+
+<p>Every corruption takes an explicit random seed. Without one, each uncertainty method in
+Milestone 3 would have been scored on a different corrupted test set and the comparison
+would have been meaningless.</p>
+
+<h4>Severity levels were calibrated, not guessed</h4>
+
+<p>Rather than choosing round numbers, I wrote <code>src/calibrate_severity.py</code> to
+sweep each corruption's parameter over a wide grid on a fixed 2,500-image subsample,
+measure accuracy at each value, and select the five levels whose accuracies fall most
+evenly between clean accuracy and a floor of 0.40. The floor sits well above chance
+(1/9 = 0.111) deliberately: a model that has collapsed to random guessing is not an
+interesting test of whether uncertainty estimates can flag its mistakes.</p>
+
+<p>This mattered. The usable range proved far narrower than round numbers suggest &mdash;
+the model loses most of its accuracy between &sigma; = 0.01 and 0.05 of noise. My initial
+guess of [0.02, 0.05, 0.09, 0.14, 0.20] would have placed severities 3, 4 and 5 all at or
+below chance, producing three identical and uninformative data points. The sweep also
+revealed that <strong>accuracy is not monotonic</strong> in corruption strength: under heavy
+contrast reduction accuracy falls to 0.0036, far <em>below</em> chance, which means the model
+is not guessing randomly but confidently predicting one wrong class, and then rises again as
+the image collapses toward flat grey.</p>
+
+<table>
+  <tr><th>Corruption</th><th class="n">s1</th><th class="n">s2</th><th class="n">s3</th>
+      <th class="n">s4</th><th class="n">s5</th></tr>
+  <tr><td>Gaussian noise (&sigma;)</td><td class="n">0.02</td><td class="n">0.025</td>
+      <td class="n">0.03</td><td class="n">0.035</td><td class="n">0.04</td></tr>
+  <tr><td>Gaussian blur (&sigma;, px)</td><td class="n">0.6</td><td class="n">0.8</td>
+      <td class="n">0.9</td><td class="n">1.2</td><td class="n">1.6</td></tr>
+  <tr><td>Contrast (factor)</td><td class="n">0.85</td><td class="n">0.8</td>
+      <td class="n">0.7</td><td class="n">0.65</td><td class="n">0.6</td></tr>
+</table>
+
+<h4>Results</h4>
+
+<p>The full test set was evaluated at all 18 conditions (3 corruptions &times; 5 severities,
+plus clean). "Gap" is mean confidence minus accuracy; a perfectly calibrated model scores
+zero.</p>
+
+<table>
+  <tr><th>Corruption</th><th>Metric</th><th class="n">s0</th><th class="n">s1</th>
+      <th class="n">s2</th><th class="n">s3</th><th class="n">s4</th><th class="n">s5</th></tr>
+  <tr><td rowspan="3">Gaussian noise</td><td>accuracy</td><td class="n">0.935</td><td class="n">0.819</td>
+      <td class="n">0.713</td><td class="n">0.561</td><td class="n">0.416</td><td class="n">0.324</td></tr>
+  <tr><td>mean confidence</td><td class="n">0.970</td><td class="n">0.933</td><td class="n">0.903</td>
+      <td class="n">0.878</td><td class="n">0.870</td><td class="n">0.878</td></tr>
+  <tr><td><strong>gap</strong></td><td class="n">+0.035</td><td class="n">+0.115</td><td class="n">+0.191</td>
+      <td class="n">+0.317</td><td class="n">+0.454</td><td class="n"><strong>+0.554</strong></td></tr>
+  <tr><td rowspan="3">Gaussian blur</td><td>accuracy</td><td class="n">0.935</td><td class="n">0.818</td>
+      <td class="n">0.691</td><td class="n">0.618</td><td class="n">0.499</td><td class="n">0.374</td></tr>
+  <tr><td>mean confidence</td><td class="n">0.970</td><td class="n">0.930</td><td class="n">0.893</td>
+      <td class="n">0.881</td><td class="n">0.854</td><td class="n">0.857</td></tr>
+  <tr><td><strong>gap</strong></td><td class="n">+0.035</td><td class="n">+0.112</td><td class="n">+0.202</td>
+      <td class="n">+0.264</td><td class="n">+0.355</td><td class="n"><strong>+0.483</strong></td></tr>
+  <tr><td rowspan="3">Contrast</td><td>accuracy</td><td class="n">0.935</td><td class="n">0.770</td>
+      <td class="n">0.705</td><td class="n">0.578</td><td class="n">0.437</td><td class="n">0.328</td></tr>
+  <tr><td>mean confidence</td><td class="n">0.970</td><td class="n">0.928</td><td class="n">0.912</td>
+      <td class="n">0.856</td><td class="n">0.814</td><td class="n">0.819</td></tr>
+  <tr><td><strong>gap</strong></td><td class="n">+0.035</td><td class="n">+0.158</td><td class="n">+0.207</td>
+      <td class="n">+0.278</td><td class="n">+0.376</td><td class="n"><strong>+0.490</strong></td></tr>
+</table>
+
+<p><strong>Accuracy collapses; confidence barely moves.</strong> Under noise, accuracy falls
+61 points while mean confidence falls 9. At severity 5 the model reports 88% confidence
+while being right 32% of the time.</p>
+
+<p><strong>Confidence can rise while accuracy falls.</strong> From noise severity 4 to 5,
+accuracy drops from 0.416 to 0.324 while mean confidence <em>increases</em> from 0.870 to
+0.878. The same reversal appears under blur and contrast. Confidence is not simply a lagging
+indicator of accuracy; the two can move in opposite directions.</p>
+
+<p><strong>Confidence becomes less discriminative.</strong> On clean data mean confidence is
+0.983 when correct and 0.777 when wrong. Under corruption the two converge, because confidence
+on wrong predictions actually <em>rises</em> while confidence on correct ones falls:</p>
+
+<table>
+  <tr><th>Separation (confidence correct &minus; incorrect)</th><th class="n">s0</th>
+      <th class="n">s1</th><th class="n">s2</th><th class="n">s3</th><th class="n">s4</th>
+      <th class="n">s5</th></tr>
+  <tr><td>Gaussian noise</td><td class="n">0.207</td><td class="n">0.150</td><td class="n">0.131</td>
+      <td class="n">0.099</td><td class="n">0.093</td><td class="n">0.090</td></tr>
+  <tr><td>Gaussian blur</td><td class="n">0.207</td><td class="n">0.140</td><td class="n">0.122</td>
+      <td class="n">0.106</td><td class="n">0.084</td><td class="n">0.086</td></tr>
+  <tr><td>Contrast</td><td class="n">0.207</td><td class="n">0.117</td><td class="n">0.107</td>
+      <td class="n">0.102</td><td class="n">0.066</td><td class="n"><strong>0.026</strong></td></tr>
+</table>
+
+<p><strong>The corruption type matters.</strong> Errors made above 99% confidence rise from
+96 on clean data to 1,644 under noise severity 5 &mdash; 34% of all errors at that severity
+&mdash; and blur behaves the same way. Contrast does the opposite: its share of
+above-99%-confidence errors <em>falls</em> to 8.4%. Washing the image out makes the model
+diffusely uncertain, whereas noise and blur make it confidently wrong. The coarse claim
+"the model becomes overconfident under shift" is therefore too imprecise; the mechanism
+differs by corruption.</p>
+
+<p><strong>Pixel-level change does not predict damage.</strong> Measuring how far each
+severity-5 corruption moves the image shows noise is roughly 1.9&times; more damaging per unit
+of pixel change than blur, suggesting the network depends on fine texture that noise destroys
+and blur merely softens.</p>
+
+<table>
+  <tr><th>Corruption (severity 5)</th><th class="n">RMSE vs clean</th><th class="n">Accuracy</th>
+      <th class="n">Accuracy lost per unit RMSE</th></tr>
+  <tr><td>Gaussian noise</td><td class="n">0.040</td><td class="n">0.324</td><td class="n"><strong>15.4</strong></td></tr>
+  <tr><td>Contrast</td><td class="n">0.064</td><td class="n">0.328</td><td class="n">9.5</td></tr>
+  <tr><td>Gaussian blur</td><td class="n">0.068</td><td class="n">0.374</td><td class="n">8.2</td></tr>
+</table>
+
+<h3>2.4 Milestone 3 &mdash; Uncertainty estimation methods (Weeks 6&ndash;7)</h3>
+
+<p>I implemented the three methods in <code>src/uncertainty.py</code> and ran all of them
+over all 18 conditions.</p>
+
+<table>
+  <tr><th>Method</th><th>What it does</th><th>Can it change the prediction?</th></tr>
+  <tr><td>Softmax confidence</td><td>unmodified network output</td><td>&mdash; (it is the prediction)</td></tr>
+  <tr><td>Temperature scaling</td><td>divide logits by a scalar <em>T</em></td>
+      <td><strong>No</strong> &mdash; monotonic in the logits</td></tr>
+  <tr><td>Monte Carlo Dropout</td><td>average 30 stochastic forward passes</td><td><strong>Yes</strong></td></tr>
+</table>
+
+<p><strong>Temperature scaling.</strong> <em>T</em> = <strong>1.2759</strong>, fitted by
+minimising negative log-likelihood on one half of the validation split and reported on the
+other half, so the benefit is never measured on the data that produced it. The test set was
+never used to fit it. On clean validation the model was already nearly calibrated
+(gap +0.0024), so <em>T</em> had almost nothing to correct in-distribution &mdash; which is
+precisely the honest deployment setting, since clean data is the only data available for
+calibration.</p>
+
+<p><strong>Monte Carlo Dropout.</strong> 30 stochastic forward passes per image, averaged. In
+addition to the mean prediction I compute <em>mutual information</em>, the gap between the
+entropy of the averaged prediction and the mean entropy of the individual predictions, which
+isolates disagreement between the sampled sub-networks rather than overall ambiguity.</p>
+
+<h4>Results: overconfidence gap by method</h4>
+
+<table>
+  <tr><th>Corruption</th><th>Method</th><th class="n">s0</th><th class="n">s1</th><th class="n">s2</th>
+      <th class="n">s3</th><th class="n">s4</th><th class="n">s5</th></tr>
+  <tr><td rowspan="3">Noise</td><td>softmax</td><td class="n">+0.035</td><td class="n">+0.115</td>
+      <td class="n">+0.191</td><td class="n">+0.317</td><td class="n">+0.454</td><td class="n">+0.554</td></tr>
+  <tr><td>temperature</td><td class="n">+0.025</td><td class="n">+0.095</td><td class="n">+0.163</td>
+      <td class="n">+0.285</td><td class="n">+0.421</td><td class="n">+0.521</td></tr>
+  <tr><td>MC Dropout</td><td class="n">+0.019</td><td class="n"><strong>+0.048</strong></td>
+      <td class="n"><strong>+0.115</strong></td><td class="n"><strong>+0.212</strong></td>
+      <td class="n"><strong>+0.331</strong></td><td class="n"><strong>+0.439</strong></td></tr>
+  <tr><td rowspan="3">Blur</td><td>softmax</td><td class="n">+0.035</td><td class="n">+0.112</td>
+      <td class="n">+0.202</td><td class="n">+0.264</td><td class="n">+0.355</td><td class="n">+0.483</td></tr>
+  <tr><td>temperature</td><td class="n">+0.025</td><td class="n">+0.090</td>
+      <td class="n"><strong>+0.170</strong></td><td class="n"><strong>+0.229</strong></td>
+      <td class="n">+0.318</td><td class="n">+0.441</td></tr>
+  <tr><td>MC Dropout</td><td class="n">+0.020</td><td class="n"><strong>+0.085</strong></td>
+      <td class="n">+0.183</td><td class="n">+0.231</td><td class="n"><strong>+0.286</strong></td>
+      <td class="n"><strong>+0.403</strong></td></tr>
+  <tr><td rowspan="3">Contrast</td><td>softmax</td><td class="n">+0.035</td><td class="n">+0.158</td>
+      <td class="n">+0.207</td><td class="n">+0.278</td><td class="n">+0.376</td><td class="n">+0.490</td></tr>
+  <tr><td>temperature</td><td class="n">+0.025</td><td class="n">+0.136</td>
+      <td class="n"><strong>+0.180</strong></td><td class="n"><strong>+0.237</strong></td>
+      <td class="n"><strong>+0.329</strong></td><td class="n">+0.435</td></tr>
+  <tr><td>MC Dropout</td><td class="n">+0.019</td><td class="n"><strong>+0.131</strong></td>
+      <td class="n">+0.200</td><td class="n">+0.270</td><td class="n">+0.330</td>
+      <td class="n"><strong>+0.418</strong></td></tr>
+</table>
+
+<p><strong>Every method improves calibration, and none of them comes close to fixing it.</strong>
+The best method at noise severity 5 still reports 77% confidence while being right 37% of the
+time. Recalibration reduces overconfidence; it does not make the model know when it is wrong.</p>
+
+<p><strong>No method wins everywhere.</strong> MC Dropout dominates under noise at every
+severity. Under blur and contrast the ranking flips with severity: temperature scaling is
+better at severities 2&ndash;3, MC Dropout at 4&ndash;5. Any claim that one method is simply
+"best" would be an artefact of which corruption was tested.</p>
+
+<p><strong>MC Dropout changes accuracy; temperature scaling cannot.</strong> I verified that
+temperature scaling changed <strong>0</strong> of 7,180 predictions across all 18 conditions,
+exactly as the mathematics requires. MC Dropout raises accuracy under noise (0.324 to 0.370 at
+severity 5) but <em>lowers</em> it under blur severity 2 (0.691 to 0.679) and contrast severity 3
+(0.578 to 0.547). Averaging over sub-networks is not free.</p>
+
+<p><strong>Mutual information is the one quantity that behaves consistently.</strong> It rises
+monotonically with severity under all three corruptions (0.031 on clean data to 0.122 for noise,
+0.124 for blur and 0.136 for contrast) without a single reversal. Unlike confidence, which can
+rise while accuracy falls, disagreement between dropout sub-networks tracks corruption
+consistently, making it a candidate shift detector even where it fails as an error detector.</p>
+
+<div class="callout">
+<p><strong>A measurement trap I identified and avoided.</strong> Temperature scaling appears to
+improve the separation between confidence-when-right and confidence-when-wrong, from 0.207 to
+0.240 on clean data. This is an artefact. Because temperature scaling is monotonic it barely
+reorders predictions: measured Spearman correlation with the unscaled confidences is
+<strong>0.9994</strong>, and error-detection AUROC moves by less than <strong>0.005</strong>. It
+fixes <em>calibration</em> (how large the numbers are) but cannot improve <em>discrimination</em>
+(which predictions get flagged first). Only MC Dropout can genuinely reorder. This yields a
+falsifiable prediction for Milestone 4, recorded here before the measurement is taken: AUROC for
+temperature scaling will be essentially identical to plain softmax.</p>
+</div>
+
+<h4>An oracle upper bound</h4>
+
+<p>I also fitted a separate "oracle" temperature on each condition. It is not deployable,
+because it requires labelled data from the corruption being faced, but it bounds what
+temperature scaling could ever achieve.</p>
+
+<table>
+  <tr><th></th><th class="n">Clean</th><th class="n">Noise s3</th><th class="n">Noise s5</th></tr>
+  <tr><td>Oracle <em>T</em>*</td><td class="n">1.89</td><td class="n">3.64</td><td class="n">5.67</td></tr>
+  <tr><td>Oracle gap</td><td class="n">&minus;0.004</td><td class="n">+0.041</td><td class="n"><strong>+0.109</strong></td></tr>
+</table>
+
+<p>Two things follow. The oracle temperature for the <em>clean</em> test set is 1.89 against the
+1.28 fitted on validation, so the cross-hospital shift alone already makes the validation-fitted
+temperature too small. And even the oracle cannot reach a zero gap at high severity: a single
+scalar is not sufficient to recalibrate a badly shifted model, even when fitted directly on the
+shift.</p>
+
+<h2 class="pb">3. Evidence of Progress</h2>
+
+<p><strong>Repository.</strong> The project is a Git repository with 3 commits containing
+1,808 lines of Python across 11 modules, 8 figures and 6 metrics files. The 1&nbsp;GB dataset,
+the 14&nbsp;MB trained model and the raw prediction files are excluded, since all are
+regenerable from the source.</p>
+
+<table>
+  <tr><th>Module</th><th>Purpose</th></tr>
+  <tr><td><code>src/config.py</code></td><td>all settings, paths, severity levels</td></tr>
+  <tr><td><code>src/data.py</code></td><td>download, loading, input pipelines, augmentation</td></tr>
+  <tr><td><code>src/model.py</code></td><td>baseline CNN (1,244,009 parameters)</td></tr>
+  <tr><td><code>src/train.py</code></td><td>training loop, callbacks, curves</td></tr>
+  <tr><td><code>src/evaluate.py</code></td><td>clean-split metrics, logits, confusion matrix</td></tr>
+  <tr><td><code>src/degradations.py</code></td><td>the three corruptions and severity registry</td></tr>
+  <tr><td><code>src/calibrate_severity.py</code></td><td>empirical selection of severity levels</td></tr>
+  <tr><td><code>src/evaluate_degraded.py</code></td><td>metrics, logits and figures under degradation</td></tr>
+  <tr><td><code>src/uncertainty.py</code></td><td>the three uncertainty methods</td></tr>
+  <tr><td><code>src/fit_temperature.py</code></td><td>fits <em>T</em> on held-out validation data</td></tr>
+  <tr><td><code>src/evaluate_uncertainty.py</code></td><td>all methods over all conditions</td></tr>
+</table>
+
+<p><strong>Saved numerical results.</strong> 74 prediction files (18 degraded logit sets and
+54 predictive distributions, one per method per condition) and 6 JSON metrics files covering
+training history, clean evaluation, severity calibration, degraded evaluation, the fitted
+temperature and the uncertainty comparison. Saving full probability matrices rather than
+summaries means any uncertainty score can be computed in Milestone 4 without re-running the
+network, and every method is scored on byte-identical inputs.</p>
+
+<figure>
+  <img src="FIG:training_curves.png">
+  <figcaption><strong>Figure 1.</strong> Baseline training over 40 epochs. The large validation
+  oscillation through roughly epoch 16 is learning-rate driven and settles once the scheduler
+  reduces the rate; the earlier chance-level region is the BatchNorm problem described in
+  Section 5.</figcaption>
+</figure>
+
+<figure>
+  <img src="FIG:confusion_matrix.png">
+  <figcaption><strong>Figure 2.</strong> Row-normalised confusion matrix on the clean test set.
+  Errors are structured: cancer-associated stroma is correct only 58% of the time, with 19%
+  going to debris and 12% to smooth muscle.</figcaption>
+</figure>
+
+<figure>
+  <img src="FIG:degradation_examples.png">
+  <figcaption><strong>Figure 3.</strong> One test image at each corruption and severity. Even at
+  severity 5 the tissue structure remains readable to a human eye, yet classifier accuracy falls
+  to roughly 0.32. These are not images a person would reject as unusable, which is what makes
+  the failure silent.</figcaption>
+</figure>
+
+<figure>
+  <img src="FIG:severity_calibration.png">
+  <figcaption><strong>Figure 4.</strong> Severity calibration on 2,500 test images. Red diamonds
+  mark the chosen levels; the dotted line is chance. The noise panel shows why round-number
+  severities would have failed: all five usable levels sit inside a narrow cliff between
+  &sigma; = 0.02 and 0.04, beyond which a plateau means further corruption changes nothing.</figcaption>
+</figure>
+
+<figure>
+  <img src="FIG:degradation_accuracy.png">
+  <figcaption><strong>Figure 5.</strong> Accuracy and mean confidence against severity. The shaded
+  region is the overconfidence gap, widening from +0.035 on clean images to +0.554 under noise at
+  severity 5.</figcaption>
+</figure>
+
+<figure>
+  <img src="FIG:degradation_confidence_gap.png">
+  <figcaption><strong>Figure 6.</strong> Left: mean confidence on correct (solid) versus incorrect
+  (dashed) predictions, converging as severity rises. Right: the share of errors made above 99%
+  confidence, which rises for noise and blur but falls for contrast &mdash; evidence that the
+  failure mode depends on the corruption.</figcaption>
+</figure>
+
+<figure>
+  <img src="FIG:uncertainty_confidence.png">
+  <figcaption><strong>Figure 7.</strong> Mean confidence of each uncertainty method against true
+  accuracy (black). All three methods cluster far above the accuracy they should be tracking.</figcaption>
+</figure>
+
+<figure>
+  <img src="FIG:uncertainty_separation.png">
+  <figcaption><strong>Figure 8.</strong> Separation between confidence when right and when wrong,
+  by method. MC Dropout preserves the most separation under noise; under contrast all three
+  collapse toward zero.</figcaption>
+</figure>
+
+<h2>4. Progress Compared with the Original Proposal</h2>
+
+<p>My proposal committed to specific tasks. Their status:</p>
+
+<table>
+  <tr><th>Commitment in the proposal</th><th>Status</th></tr>
+  <tr><td>Use Python with TensorFlow or Keras</td><td class="done">Complete &mdash; TensorFlow 2.18 / Keras 3</td></tr>
+  <tr><td>Use a publicly available medical image classification dataset</td>
+      <td class="done">Complete &mdash; PathMNIST 64&times;64</td></tr>
+  <tr><td>Train or fine-tune a standard image classification model</td>
+      <td class="done">Complete &mdash; CNN trained from scratch, 0.9348 test accuracy</td></tr>
+  <tr><td>Evaluate the model on the normal test set</td><td class="done">Complete</td></tr>
+  <tr><td>Create altered test images with Gaussian noise, blur and contrast changes</td>
+      <td class="done">Complete &mdash; 5 calibrated severities each</td></tr>
+  <tr><td>Keep altered images out of training</td><td class="done">Complete &mdash; test split only</td></tr>
+  <tr><td>Compare softmax confidence, temperature scaling and Monte Carlo Dropout</td>
+      <td class="done">Complete &mdash; all three implemented and run on all conditions</td></tr>
+  <tr><td>Measure accuracy, with the main focus on identifying wrong predictions</td>
+      <td class="prog">In progress &mdash; accuracy done; formal error detection is Milestone 4</td></tr>
+  <tr><td>Use AUROC and calibration error to compare the methods</td>
+      <td class="prog">In progress &mdash; Milestone 4</td></tr>
+  <tr><td>Produce tables, graphs and an analysis of which method is most effective</td>
+      <td class="prog">In progress &mdash; 8 figures and all tables produced; final analysis is Milestone 5</td></tr>
+</table>
+
+<p><strong>Am I on schedule?</strong> Yes. Every experimental component the proposal described
+is built and running. What remains is the comparison layer: turning the saved predictions into
+AUROC and calibration-error numbers, and writing the analysis. Because all 54 predictive
+distributions are already saved to disk, Milestone 4 requires no retraining and no re-running
+of the network.</p>
+
+<h4>Changes to the original plan, and why</h4>
+
+<ul>
+  <li><strong>Trained from scratch rather than fine-tuning a pretrained model.</strong> The
+  proposal allowed either. Pretrained ImageNet models expect 224&times;224 inputs, which would
+  have meant upscaling 64&times;64 histology tiles by 3.5&times; and a far more expensive model
+  for no clear benefit. A compact CNN reaches 0.9348 test accuracy and trains in under three
+  hours.</li>
+
+  <li><strong>Added an empirical severity-calibration step.</strong> Not in the original plan.
+  It became necessary once I found that hand-picked severities placed most levels below chance.
+  This is now a methodological contribution rather than an implementation detail.</li>
+
+  <li><strong>Added an oracle temperature as an upper bound.</strong> Not in the original plan.
+  Without it, a weak result for temperature scaling would be ambiguous between "the method is
+  weak" and "the fitted <em>T</em> was poor".</li>
+
+  <li><strong>Deliberately excluded contrast and brightness from training augmentation.</strong>
+  Not anticipated in the proposal. Training with contrast jitter would have made the model robust
+  to precisely the corruption the project studies, confounding the entire experiment.</li>
+</ul>
+
+<h2 class="pb">5. Challenges and Solutions</h2>
+
+<h4>5.1 TensorFlow would not install on the available Python</h4>
+<p><em>Problem.</em> The machine's default Python is 3.14, for which TensorFlow publishes no
+wheels. Python 3.12 also failed, because TensorFlow 2.18 imports <code>distutils</code>, which
+3.12 removed from the standard library, and the compatibility shim did not reliably activate at
+interpreter startup.<br>
+<em>Impact.</em> Blocked all work until resolved.<br>
+<em>Solution.</em> Rebuilt the environment on Python 3.11, which still ships
+<code>distutils</code>. <strong>Resolved.</strong></p>
+
+<h4>5.2 GPU plugin incompatible with the installed TensorFlow</h4>
+<p><em>Problem.</em> <code>tensorflow-metal</code> 1.2.0 is ABI-incompatible with TensorFlow
+2.21 and broke <code>import tensorflow</code> outright with a dynamic-linking error.<br>
+<em>Impact.</em> Without GPU acceleration, training would have taken about three times longer
+(5.9 versus 1.8 minutes per epoch).<br>
+<em>Solution.</em> Pinned TensorFlow 2.18 with tensorflow-metal 1.2.0. Because this project is
+about confidence calibration, I verified the GPU numerically before trusting it: with identical
+weights, GPU and CPU forward passes agreed to a maximum absolute difference of 1.8&times;10<sup>&minus;7</sup>
+with 100% agreement on the predicted class, and gradient norms matched to six significant digits.
+<strong>Resolved.</strong></p>
+
+<h4>5.3 Validation accuracy stuck at chance while training looked healthy</h4>
+<p><em>Problem.</em> Early in training, accuracy on the training set climbed normally while
+validation accuracy sat at chance (1/9), with the model predicting a single class for all 10,004
+validation images.<br>
+<em>Impact.</em> This looked exactly like a data bug &mdash; mismatched images and labels, or a
+corrupted split &mdash; and would have invalidated every downstream result.<br>
+<em>Diagnosis.</em> I evaluated the same model using batch statistics instead of BatchNorm's
+stored moving averages and obtained 0.65 on training data and 0.64 on validation: nearly
+identical and both healthy. Only inference mode collapsed, and it collapsed on the
+<em>training</em> data too. A corrupted validation split cannot explain a failure that also
+appears on training data, which exonerated the data.<br>
+<em>Cause.</em> Keras defaults BatchNorm momentum to 0.99. The true activation variance in this
+network is far below BatchNorm's initial value of 1.0, so the leftover initialisation still
+dominated the stored moving variance after hundreds of updates, compounding across nine BatchNorm
+layers. This was not merely cosmetic: checkpointing and early stopping both select on validation
+loss, so unreliable early validation numbers corrupt model selection.<br>
+<em>Solution.</em> Set momentum to 0.9. Validation accuracy after two identical epochs rose from
+0.109 to 0.640, and after full training the stored moving variance matched the true activation
+variance to within 0.6%. <strong>Resolved.</strong></p>
+
+<h4>5.4 Hand-picked corruption severities were unusable</h4>
+<p><em>Problem.</em> My first severity levels placed three of five noise levels at or below
+chance. A second attempt, selecting levels by closest accuracy to a target, chose the identity
+transform (no corruption at all) as contrast severity 1, because accuracy is not monotonic in
+corruption strength.<br>
+<em>Impact.</em> Would have produced several identical, uninformative data points and an invalid
+severity scale.<br>
+<em>Solution.</em> Wrote a calibration script that sweeps each parameter, then selects the first
+value to cross each accuracy target while walking forward through the grid, which guarantees
+levels strictly increasing in strength and never reuses the clean image.
+<strong>Resolved.</strong></p>
+
+<h4>5.5 Monte Carlo Dropout would have silently corrupted BatchNorm</h4>
+<p><em>Problem.</em> The usual way to keep dropout active at prediction time is to call the model
+with <code>training=True</code>. That flag is global, so it would also have switched
+BatchNormalization into batch-statistics mode &mdash; the same failure as Challenge 5.3.<br>
+<em>Impact.</em> Every MC Dropout uncertainty estimate would have been wrong, with no error
+message. I measured the counterfactual: <code>training=True</code> changes 5.9% of predictions
+outright.<br>
+<em>Solution.</em> Subclassed Keras's Dropout layer to force itself active regardless of the
+flag, and cloned the model replacing only the dropout layers, leaving BatchNorm untouched. I
+verified the surgery by building a clone with the dropout rate forced to zero: it reproduces the
+original model's output <em>exactly</em> (difference 0.0), proving BatchNorm still uses its moving
+statistics. <strong>Resolved.</strong></p>
+
+<h4>5.6 Monte Carlo Dropout is not reproducible on this hardware</h4>
+<p><em>Problem.</em> Seeding does not make MC Dropout deterministic on the Metal GPU backend. Two
+runs with an identical seed produced accuracies of 0.9410 and 0.9435, with individual predicted
+probabilities differing by as much as 0.26.<br>
+<em>Impact.</em> Small reported differences between MC Dropout and the other methods could be
+noise rather than signal.<br>
+<em>Solution.</em> Quantified the noise floor instead of ignoring it: across five seeds accuracy
+spanned 0.9415 to 0.9450, a spread of 0.0035. MC Dropout's advantage under noise (+3.5 to +6.1
+accuracy points) is an order of magnitude above this, so the main conclusions hold, but
+differences of about one point are now reported as ties. <strong>Resolved as a documented
+limitation</strong> rather than eliminated; forcing determinism on this backend is not
+straightforward.</p>
+
+<h4>5.7 A metric that would have produced a false conclusion</h4>
+<p><em>Problem.</em> Temperature scaling appeared to improve the separation between
+confidence-when-right and confidence-when-wrong, which would have supported the conclusion that
+it improves error detection.<br>
+<em>Impact.</em> This would have been a wrong finding in the final report.<br>
+<em>Solution.</em> I checked whether temperature scaling actually reorders predictions. Spearman
+correlation with the unscaled confidences is 0.9994 and error-detection AUROC moves by less than
+0.005, so the apparent gain is an artefact of nonlinear squashing rather than better detection.
+The limitation is now documented in the code so the metric is not misread.
+<strong>Resolved.</strong></p>
+
+<h2>6. Current Project Status</h2>
+
+<p><strong>Three of five milestones are complete.</strong> The project has a working classifier,
+a validated degradation pipeline, and all three uncertainty methods implemented and run across
+every experimental condition. The experimental infrastructure is finished; what remains is
+measurement and analysis.</p>
+
+<p><strong>Major outcomes so far:</strong></p>
+<ul>
+  <li>A trained classifier reaching 0.9348 accuracy on the clean test set and 0.9945 on validation.</li>
+  <li>Quantified evidence that the model is overconfident even on clean test data, with 96 of its
+      468 errors made at over 99% confidence.</li>
+  <li>A calibrated degradation benchmark of 18 conditions showing the overconfidence gap growing
+      from +0.035 to +0.554, with confidence sometimes <em>rising</em> as accuracy falls.</li>
+  <li>Evidence that the failure mode depends on corruption type: noise and blur produce
+      confidently wrong predictions, contrast produces diffuse uncertainty.</li>
+  <li>All three uncertainty methods implemented, with the finding that each improves calibration,
+      none fixes it, and no method wins under every corruption.</li>
+  <li>Mutual information identified as the only measured quantity that rises monotonically with
+      corruption severity.</li>
+  <li>54 saved predictive distributions, so the remaining analysis requires no recomputation.</li>
+</ul>
+
+<p><strong>What is incomplete:</strong> the formal misclassification-detection metrics (AUROC and
+expected calibration error) that answer the research question directly, and the final written
+analysis. The descriptive evidence gathered so far strongly suggests what those metrics will
+show, but it does not substitute for measuring them.</p>
+
+<h2>7. Plan for the Second Half of the Semester</h2>
+
+<h4>Milestone 4 &mdash; Misclassification-detection metrics</h4>
+<p>This is the milestone that answers the research question. For each method at each of the 18
+conditions I will compute:</p>
+<ul>
+  <li><strong>AUROC for misclassification detection</strong>, the headline metric: how well does
+  each uncertainty score rank wrong predictions above right ones? This will test the prediction
+  recorded in Section 2.4 &mdash; that temperature scaling matches plain softmax almost exactly,
+  because it cannot reorder predictions.</li>
+  <li><strong>Expected calibration error</strong>, with reliability diagrams. AUROC measures
+  ranking within a condition and will not by itself reveal that confidence is globally too high;
+  the two metrics answer different questions and both are needed.</li>
+  <li><strong>Risk&ndash;coverage analysis</strong>: if the model abstains on its least confident
+  <em>x</em>%, how much does accuracy recover? This is the form a clinical workflow would actually
+  use, and it converts the abstract comparison into a decision a hospital could act on.</li>
+  <li><strong>Mutual information as an error-detection score</strong>, compared against maximum
+  probability, since it is the only quantity that tracked severity monotonically.</li>
+</ul>
+
+<h4>Milestone 5 &mdash; Final comparison and written analysis</h4>
+<ul>
+  <li>Consolidate all results into a single comparison across methods, corruptions and severities.</li>
+  <li>Produce the final figure set and results tables.</li>
+  <li>Write the analysis: which method gives the most reliable warning, under which conditions,
+  and at what cost. MC Dropout is 30&times; more expensive at inference than the alternatives, which
+  is a real consideration for deployment.</li>
+  <li>State the limitations honestly: synthetic corruptions are not real scanner artefacts, the
+  study uses one architecture and one dataset, only contrast reduction was tested rather than
+  increase, and the severity levels are calibrated to this particular model.</li>
+</ul>
+
+<h4>Risks for the remainder</h4>
+<p>The main technical risk is low, because no further training is required and the saved
+predictions make the remaining analysis cheap to run and re-run. The more realistic risk is
+interpretive: with three methods, three corruptions, six severity levels and several metrics, the
+results form a large grid, and the conclusion must be a clear answer to the research question
+rather than an undigested table. Evidence already gathered &mdash; that no method wins everywhere,
+and that the corruption type changes the failure mode &mdash; suggests the honest answer will be
+conditional rather than a single winner, and the final analysis needs to present that clearly
+instead of overstating a result.</p>
+

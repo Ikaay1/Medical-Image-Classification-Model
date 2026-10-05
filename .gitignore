@@ -24,3 +24,6 @@ __pycache__/
 
 # Stray file unrelated to this project
 SKILL.md
+
+# Intermediate used when building the report PDF
+report/midterm_embedded.html
