@@ -1,0 +1,21 @@
+{
+  "temperature": 1.2758703280509907,
+  "n_fit": 5002,
+  "n_eval": 5002,
+  "fit_half": {
+    "accuracy": 0.9950019992003198,
+    "accuracy_after": 0.9950019992003198,
+    "nll_before": 0.019579343497753143,
+    "nll_after": 0.01846524514257908,
+    "mean_confidence_before": 0.9964029788970947,
+    "mean_confidence_after": 0.9944660067558289
+  },
+  "held_out_half": {
+    "accuracy": 0.9940023990403839,
+    "accuracy_after": 0.9940023990403839,
+    "nll_before": 0.017971163615584373,
+    "nll_after": 0.017086036503314972,
+    "mean_confidence_before": 0.9964240789413452,
+    "mean_confidence_after": 0.9945653676986694
+  }
+}

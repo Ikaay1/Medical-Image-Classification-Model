@@ -1,0 +1,26 @@
+# Virtual environment
+.venv/
+
+# Dataset archives (~1 GB; re-downloaded by src/data.py)
+data/
+
+# Large regenerable artifacts.
+# NOTE: .gitignore does not support trailing comments on a pattern line --
+# the comment becomes part of the pattern and silently matches nothing.
+# 14 MB trained model:
+outputs/models/
+# raw logits and uncertainty scores:
+outputs/predictions/
+
+# Figures and metrics ARE tracked: they are the evidence of results, they are
+# small, and they let someone read the findings without running anything.
+
+# Python
+__pycache__/
+*.py[cod]
+
+# macOS
+.DS_Store
+
+# Stray file unrelated to this project
+SKILL.md
