@@ -231,6 +231,22 @@ It fixes *calibration* (how large the numbers are) but cannot improve
 genuinely reorder. Milestone 4's AUROC is the metric that separates these, and
 this prediction is now on record before that measurement is taken.
 
+### Caveat: MC Dropout is not bit-reproducible
+
+Seeding does not make it deterministic on this hardware. Two runs with an
+identical seed produced accuracies of 0.9410 and 0.9435, with individual
+predicted probabilities differing by as much as 0.26; across five seeds
+accuracy spanned 0.9415 to 0.9450, a spread of **0.0035** on 2,000 images. The
+Metal backend does not honour `keras.utils.set_random_seed` for the dropout
+masks.
+
+Aggregate conclusions are unaffected, but this sets a floor on what counts as a
+real difference. MC Dropout's advantage under noise (+3.5 to +6.1 accuracy
+points) and its deficit under contrast s3 (-3.1 points) are an order of
+magnitude above the noise floor. Differences of around a point — blur s3
+(-0.1), contrast s4 (+0.8), clean (+0.7) — are at or near it and should be
+read as ties. The deterministic methods have no such caveat.
+
 ### The oracle upper bound
 
 An oracle temperature was also fitted separately on each condition. It is not

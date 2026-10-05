@@ -163,6 +163,13 @@ def mc_dropout_predict(
     second is the kind of uncertainty extra training data would reduce, and it
     is the one that should rise on corrupted inputs.
     """
+    # NOT bit-reproducible on this setup. keras.utils.set_random_seed is called
+    # here, but the Metal GPU backend still produces different dropout masks
+    # run to run: two calls with the same seed were measured differing by up to
+    # 0.26 in individual predicted probabilities. Aggregate metrics are stable
+    # -- accuracy over 5 seeds spanned 0.9415 to 0.9450, a spread of 0.0035 on
+    # 2,000 images -- so run-to-run differences below roughly 0.004 accuracy
+    # should not be interpreted as real. Raising n_samples shrinks this.
     keras.utils.set_random_seed(seed)
 
     summed = np.zeros((len(images), config.NUM_CLASSES), dtype=np.float64)
