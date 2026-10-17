@@ -1,16 +1,20 @@
 #!/bin/bash
-# Build the midterm report as PDF and DOCX from Midterm_Project_Report.html.
+# Build a report as PDF and DOCX from its HTML source.
 #
-# Figures are pulled from ../outputs/figures via the FIG:<name> placeholders in
-# the HTML. Requires Google Chrome (PDF) and the docx npm module (Word).
+#   ./build.sh                               # defaults to the midterm report
+#   ./build.sh Week8_9_Progress_Report.html  # any report
+#
+# Figures are pulled from ../outputs/figures via FIG:<name> placeholders.
+# PDF needs Google Chrome; DOCX needs the docx npm module.
 set -euo pipefail
 cd "$(dirname "$0")"
-SRC=Midterm_Project_Report.html
+SRC="${1:-Midterm_Project_Report.html}"
+BASE="${SRC%.html}"
 
-# ---- PDF: inline the figures as base64, then print with headless Chrome ----
-../.venv/bin/python - <<PY
-import base64, pathlib, re
-html = pathlib.Path("$SRC").read_text()
+# ---- PDF: inline figures as base64, print with headless Chrome ----
+../.venv/bin/python - "$SRC" <<'PY'
+import base64, pathlib, re, sys
+html = pathlib.Path(sys.argv[1]).read_text()
 figdir = pathlib.Path("../outputs/figures")
 missing = []
 def sub(m):
@@ -26,13 +30,12 @@ PY
 
 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" \
   --headless --disable-gpu --no-pdf-header-footer \
-  --print-to-pdf="Midterm_Project_Report.pdf" \
-  "file://$(pwd)/_embedded.html" 2>/dev/null
+  --print-to-pdf="$BASE.pdf" "file://$(pwd)/_embedded.html" 2>/dev/null
 rm -f _embedded.html
-echo "built Midterm_Project_Report.pdf"
+echo "built $BASE.pdf"
 
-# ---- DOCX: parse the HTML to JSON, then build with docx-js ----
+# ---- DOCX: parse the HTML to JSON, build with docx-js ----
 [ -d node_modules/docx ] || npm install docx --silent
-../.venv/bin/python parse_html.py
-node build_docx.js
-rm -f doc.json
+../.venv/bin/python parse_html.py "$SRC" _blocks.json
+node build_docx.js _blocks.json "$BASE.docx"
+rm -f _blocks.json

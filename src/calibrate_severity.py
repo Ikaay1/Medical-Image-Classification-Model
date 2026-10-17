@@ -58,6 +58,16 @@ CALIBRATION_N = 2500
 ACCURACY_FLOOR = 0.40
 
 
+def calibration_indices(n_test: int) -> np.ndarray:
+    """Indices of the test images used for the severity sweep.
+
+    These images helped choose the severity levels, so they must not also be
+    used to report results. evaluate_heldout.py excludes exactly this set.
+    """
+    rng = np.random.default_rng(config.SEED)
+    return rng.choice(n_test, size=min(CALIBRATION_N, n_test), replace=False)
+
+
 def accuracy_at(model, images_u8: np.ndarray, labels: np.ndarray, name: str, value: float) -> float:
     """Apply one corruption at one parameter value and return accuracy."""
     func, _ = degradations.CORRUPTIONS[name]
@@ -111,8 +121,7 @@ def main() -> None:
     model = keras.models.load_model(config.BEST_MODEL_PATH)
     images, labels = data.load_split("test")
 
-    rng = np.random.default_rng(config.SEED)
-    idx = rng.choice(len(labels), size=min(CALIBRATION_N, len(labels)), replace=False)
+    idx = calibration_indices(len(labels))
     images, labels = images[idx], labels[idx]
     print(f"Calibrating on {len(labels):,} test images (floor = {ACCURACY_FLOOR:.2f})\n")
 

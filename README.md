@@ -15,7 +15,7 @@ degraded images that differ from its training data?
 | 1 | Environment, data pipeline, baseline classifier, clean-test evaluation | **Done** (results below) |
 | 2 | Image degradations (Gaussian noise, blur, contrast) + accuracy under shift | **Done** (results below) |
 | 3 | Uncertainty methods: softmax confidence, temperature scaling, MC Dropout | **Done** (results below) |
-| 4 | Misclassification-detection metrics (AUROC, calibration error) | Not started |
+| 4 | Misclassification-detection metrics (AUROC, calibration error) | **Done** (results below) |
 | 5 | Final comparison, figures, written analysis | Not started |
 
 ---
@@ -262,30 +262,147 @@ Second, even the oracle cannot reach zero gap at high severity: a single scalar
 is not enough to recalibrate a badly shifted model even when fitted directly on
 the shift.
 
-### What Milestone 4 inherits
+## Milestone 4 results — does any of this actually detect errors?
 
-54 saved predictive distributions (3 methods x 18 conditions), each a full
-probability matrix rather than a summary, so any uncertainty score - maximum
-probability, entropy, margin, mutual information - can be computed without
-re-running anything. Every method is scored on byte-identical inputs.
+Milestones 2 and 3 measured how *large* confidence is. That is a different
+question from whether confidence is *useful*. This milestone separates three
+things a method can succeed or fail at independently:
 
-Milestone 4 should compute, per method per condition:
+| | Question | Metric |
+|---|---|---|
+| **Discrimination** | can the score rank wrong predictions above right ones? | AUROC for misclassification detection |
+| **Calibration** | does a stated confidence of 0.8 mean right 80% of the time? | expected / maximum calibration error |
+| **Usefulness** | if the model abstains on its least confident cases, how much does accuracy recover? | risk-coverage curve, AURC |
 
-- **AUROC for misclassification detection**, the headline metric. This is the
-  measurement that will confirm or refute the prediction recorded above: that
-  temperature scaling matches plain softmax almost exactly, because it cannot
-  reorder predictions.
-- **Expected calibration error**, with reliability diagrams.
-- **Risk-coverage / selective prediction**: if the model abstains on its least
-  confident x%, how much does accuracy recover? This is the form a clinical
-  workflow would actually use.
+Nothing was re-run through the network; all of it is computed from the 54 saved
+predictive distributions, so every method is scored on byte-identical inputs.
 
-Two things to be careful about. AUROC is computed within a single condition, so
-it measures ranking at a fixed corruption and will not by itself reveal that
-confidence is globally too high - that is what ECE is for; the two answer
-different questions and both are needed. And when comparing methods, note that
-MC Dropout changes the predictions themselves, so each method is being scored
-against its own error set rather than a shared one.
+### Reporting on held-out images
+
+`calibrate_severity.py` chose the severity levels using a 2,500-image subsample
+of the test set, and Milestone 2 then reported results on the full 7,180 images,
+which include those 2,500. Tuning and reporting on overlapping data can bias the
+numbers toward the targets the levels were tuned to hit.
+
+`src/evaluate_heldout.py` removes the overlap by rescoring the saved logits on
+the 4,680 images that were never used for calibration. The effect turns out to
+be negligible — the largest accuracy difference across all 18 conditions is
+**0.0075**, and the largest AUROC difference is **0.0100** — but Milestone 4
+reports held-out numbers as primary anyway, with full-test figures alongside.
+
+### The Milestone 3 prediction was correct
+
+Milestone 3 recorded a falsifiable prediction: because temperature scaling is
+monotonic, it should be unable to change *which* predictions get flagged, and
+its AUROC should therefore match plain softmax almost exactly.
+
+Measured across all 18 conditions: **maximum AUROC difference 0.00426, mean
+0.00149.** The prediction holds. In `detection_auroc.png` the temperature curve
+is drawn dashed on top of a thick softmax curve, and the two coincide everywhere.
+
+This is the clearest result in the project so far, because the same method
+improves calibration substantially while doing nothing at all for discrimination:
+
+| Noise severity 5 | softmax | temperature | MC Dropout |
+|---|---:|---:|---:|
+| ECE (lower better) | 0.556 | **0.522** | **0.441** |
+| AUROC (higher better) | 0.7685 | 0.7728 | 0.7698 |
+
+Temperature scaling cuts ECE by 0.034 and moves AUROC by 0.004. Reporting only
+one of these two metrics would give a materially wrong impression of what the
+method does.
+
+### Error detection degrades badly, and differently per corruption
+
+AUROC using softmax confidence, held-out images:
+
+| Corruption | s0 | s1 | s2 | s3 | s4 | s5 |
+|---|---:|---:|---:|---:|---:|---:|
+| Gaussian noise | 0.9244 | 0.8283 | 0.7769 | 0.7279 | 0.7400 | 0.7685 |
+| Gaussian blur | 0.9244 | 0.8116 | 0.7522 | 0.7107 | 0.6030 | 0.6100 |
+| Contrast | 0.9244 | 0.8286 | 0.7951 | 0.6658 | 0.6302 | **0.5899** |
+
+On clean data confidence is a genuinely good error detector (0.9244). Under
+corruption it falls apart, and the Milestone 2 prediction that **contrast would
+be the worst case** is confirmed: 0.5899 is barely better than the 0.5 of a coin
+flip. Noise is the mildest case and even partially recovers at high severity,
+while blur and contrast decline monotonically.
+
+### Selective prediction: the practical result
+
+If the model abstains on its least confident cases and a human reviews those
+instead, how good are the predictions it keeps? Softmax confidence, held-out:
+
+| Condition | keep 100% | keep 90% | keep 80% | keep 70% | keep 50% |
+|---|---:|---:|---:|---:|---:|
+| Clean | 0.934 | 0.976 | 0.986 | 0.992 | **0.999** |
+| Noise s3 | 0.562 | 0.593 | 0.616 | 0.646 | 0.724 |
+| Noise s5 | 0.321 | 0.342 | 0.360 | 0.389 | 0.479 |
+| Contrast s5 | 0.327 | 0.330 | 0.332 | 0.332 | **0.370** |
+
+This is the most practically damning table in the project. On clean data
+abstention works beautifully: discard the least confident 20% and accuracy goes
+from 0.934 to 0.986. Under contrast severity 5 it barely works at all —
+abstaining on **half** the images raises accuracy from 0.327 to 0.370, four
+percentage points for throwing away half the workload. The cases the model is
+most confident about are very nearly as wrong as the ones it is least confident
+about.
+
+By AURC (lower is better), MC Dropout is clearly the best of the three under
+noise — 0.183 against 0.258 for softmax at severity 3 — though part of that
+advantage is that MC Dropout is also more accurate there, so it is ranking an
+easier set of mistakes.
+
+### Which uncertainty score is best?
+
+Four scores were compared within MC Dropout: maximum probability, predictive
+entropy, margin between the top two classes, and mutual information. The
+differences are small. Entropy is slightly ahead of maximum probability at mid
+severities under noise and contrast; mutual information is slightly ahead under
+heavy blur. None of them rescues a condition where maximum probability has
+already failed.
+
+This is worth stating plainly because mutual information looked promising in
+Milestone 3: it was the only quantity that rose monotonically with severity. It
+is a good *shift detector* — it reliably indicates that something has changed —
+but it is not a better *error detector* than plain confidence. Those are
+different jobs, and this milestone is where that distinction becomes measurable.
+
+### Summary
+
+- Every method improves calibration; none of them restores error detection.
+- Temperature scaling improves ECE and does nothing for AUROC, exactly as predicted.
+- MC Dropout is the best of the three under noise, on all three metrics, and is
+  no better or slightly worse under blur and contrast.
+- Under contrast at high severity, all three methods are close to useless: AUROC
+  0.59, and abstaining on half the data buys four accuracy points.
+
+### What Milestone 5 inherits
+
+Everything needed for the final analysis is already computed and on disk:
+`detection_evaluation.json` holds AUROC, ECE, MCE, AURC and accuracy-at-coverage
+for 3 methods x 18 conditions x 4 uncertainty scores, on both the held-out and
+full test sets. No model runs remain.
+
+Milestone 5 is consolidation and writing, not measurement. Three things it has
+to get right:
+
+- **The answer is conditional, and should be stated that way.** No method wins
+  everywhere. MC Dropout is best under noise and no better under blur or
+  contrast; temperature scaling fixes calibration and not discrimination. A
+  single-winner conclusion would misrepresent the data.
+- **Report calibration and discrimination side by side.** Temperature scaling is
+  the worked example of why: 0.034 improvement in ECE, 0.004 in AUROC. Either
+  metric alone tells a misleading story.
+- **Cost belongs in the comparison.** MC Dropout is 30 forward passes per image
+  against one for the alternatives, and its results are not bit-reproducible on
+  this hardware (noise floor about 0.004 accuracy). Its wins under noise are well
+  above that floor; its differences under blur and contrast often are not.
+
+Limitations already identified and worth stating explicitly: synthetic
+corruptions are not real scanner artefacts; one architecture and one dataset;
+contrast reduction only, not increase; and severity levels calibrated to this
+specific model, so they do not transfer.
 
 ---
 
@@ -338,6 +455,14 @@ python3.11 -m venv .venv
 # runs 30 stochastic passes per condition)
 .venv/bin/python -m src.evaluate_uncertainty
 .venv/bin/python -m src.evaluate_uncertainty --mc-samples 5   # quick trial
+
+# --- Milestone 4 ---
+
+# Re-score the degradation study on images not used to pick severities (instant)
+.venv/bin/python -m src.evaluate_heldout
+
+# AUROC, calibration error and risk-coverage for every method (~1 min)
+.venv/bin/python -m src.evaluate_detection
 ```
 
 Artifacts land in `outputs/` (git-ignored):
@@ -363,6 +488,14 @@ outputs/metrics/uncertainty_evaluation.json    all method x condition metrics
 outputs/predictions/uncertainty/*.npz          54 files (3 methods x 18 conditions)
 outputs/figures/uncertainty_confidence.png
 outputs/figures/uncertainty_separation.png
+
+outputs/metrics/heldout_evaluation.json        full vs held-out comparison
+outputs/metrics/detection_evaluation.json      AUROC, ECE, risk-coverage
+outputs/figures/detection_auroc.png
+outputs/figures/detection_calibration.png
+outputs/figures/reliability_diagrams.png
+outputs/figures/risk_coverage.png
+outputs/figures/score_comparison.png
 ```
 
 ---
@@ -488,4 +621,7 @@ src/evaluate_degraded.py   metrics, logits and figures under degradation
 src/uncertainty.py         the three methods + MC Dropout model surgery
 src/fit_temperature.py     fits T on a held-out half of validation
 src/evaluate_uncertainty.py  all methods over all conditions
+src/evaluate_heldout.py    rescore without the severity-calibration images
+src/metrics.py             AUROC, calibration error, risk-coverage
+src/evaluate_detection.py  Milestone 4 metrics and figures
 ```

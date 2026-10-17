@@ -4,7 +4,9 @@ const {
   WidthType, ShadingType, HeadingLevel, AlignmentType, BorderStyle,
 } = require("docx");
 
-const blocks = JSON.parse(fs.readFileSync("doc.json", "utf8"));
+const jsonPath = process.argv[2] || "doc.json";
+const outPath  = process.argv[3] || "Midterm_Project_Report.docx";
+const blocks = JSON.parse(fs.readFileSync(jsonPath, "utf8"));
 
 // US Letter, 0.75in margins -> content width in DXA (1440 per inch)
 const PAGE_W = 12240, MARGIN = 1080;
@@ -64,6 +66,12 @@ for (const b of blocks) {
       spacing: { before: 320, after: 120 },
       children: runs(b.runs, { size: 26, bold: true }),
     }));
+  } else if (b.type === "h3" || b.type === "h4") {
+    children.push(new Paragraph({
+      heading: b.type === "h3" ? HeadingLevel.HEADING_2 : HeadingLevel.HEADING_3,
+      spacing: { before: 240, after: 100 },
+      children: runs(b.runs, { size: 23, bold: true }),
+    }));
   } else if (b.type === "p") {
     children.push(new Paragraph({
       spacing: { before: 60, after: 120, line: 300 },
@@ -102,6 +110,6 @@ const doc = new Document({
 });
 
 Packer.toBuffer(doc).then(buf => {
-  fs.writeFileSync("Midterm_Project_Report.docx", buf);
-  console.log(`wrote Midterm_Project_Report.docx (${(buf.length / 1e6).toFixed(2)} MB, ${children.length} blocks)`);
+  fs.writeFileSync(outPath, buf);
+  console.log(`wrote ${outPath} (${(buf.length / 1e6).toFixed(2)} MB, ${children.length} blocks)`);
 });

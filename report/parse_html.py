@@ -1,5 +1,5 @@
 """Parse the midterm HTML into a JSON block list for the docx builder."""
-import json, pathlib, re
+import json, pathlib, re, sys
 from html.parser import HTMLParser
 from PIL import Image
 
@@ -49,11 +49,20 @@ class R(HTMLParser):
                 out[i]["text"] = out[i]["text"].lstrip() if i == 0 else out[i]["text"].rstrip()
         return out
 
+    # Block tags we deliberately ignore (containers, not content).
+    IGNORED = {"html","head","body","meta","title","style","div","figure",
+               "table","tr","thead","tbody","br","img","span","a"}
+
     def handle_starttag(self, tag, attrs):
         a = dict(attrs)
+        known = {"strong","b","em","i","h1","h2","h3","h4","p","figcaption","td","th"}
+        if tag not in known and tag not in self.IGNORED:
+            raise SystemExit(
+                f"parse_html.py: unhandled tag <{tag}> would be dropped silently. "
+                "Add it to the parser or to IGNORED.")
         if tag in ("strong","b","em","i"):
             self.stack.append(tag)
-        elif tag in ("h1","h2","p","figcaption"):
+        elif tag in ("h1","h2","h3","h4","p","figcaption"):
             self.mode = tag; self.runs = []
         elif tag == "table":
             self.table = []
@@ -79,7 +88,7 @@ class R(HTMLParser):
     def handle_endtag(self, tag):
         if tag in ("strong","b","em","i"):
             if tag in self.stack: self.stack.remove(tag)
-        elif tag in ("h1","h2","p"):
+        elif tag in ("h1","h2","h3","h4","p"):
             runs = self._flush()
             if runs: self.blocks.append({"type":tag,"runs":runs})
             self.mode = None
@@ -104,10 +113,12 @@ class R(HTMLParser):
                 self.blocks.append({"type":"table","rows":self.table})
             self.table = None
 
-src = pathlib.Path("Midterm_Project_Report.html").read_text()
+infile = sys.argv[1] if len(sys.argv) > 1 else "Midterm_Project_Report.html"
+outfile = sys.argv[2] if len(sys.argv) > 2 else "doc.json"
+src = pathlib.Path(infile).read_text()
 body = src.split("<body>",1)[1].rsplit("</body>",1)[0]
 r = R(); r.feed(body)
-pathlib.Path("doc.json").write_text(json.dumps(r.blocks, indent=1))
+pathlib.Path(outfile).write_text(json.dumps(r.blocks, indent=1))
 
 from collections import Counter
 c = Counter(b["type"] for b in r.blocks)
