@@ -440,8 +440,10 @@ round-trips to within 1e-6.
 | s3 | 0.598 | 0.923 | +0.324 |
 | s5 | 0.364 | 0.881 | **+0.517** |
 
-This is the largest overconfidence gap of any corruption. At s5, 37% of all errors
-(1,674 of 4,563) are made with more than 99% confidence. A recoloured slide looks
+The gap is second only to noise (+0.554 at s5). What sets stain shift apart is
+how sure the wrong answers are: it has the highest share of errors made with more
+than 99% confidence at every severity (32–40%, against 8–34% for the other
+corruptions). At s5 that is 37% of all errors (1,674 of 4,563). A recoloured slide looks
 like a perfectly ordinary slide to the network. An oracle temperature fitted on
 the shifted data itself would close the gap (T rises from 2.7 to 7.7), but no
 single temperature fitted on clean data can.
