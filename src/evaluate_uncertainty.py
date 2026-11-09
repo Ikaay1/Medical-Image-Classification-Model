@@ -89,6 +89,11 @@ def summarise(probs: np.ndarray, labels: np.ndarray) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--mc-samples", type=int, default=config.MC_DROPOUT_SAMPLES)
+    # MC Dropout is not bit-reproducible on this hardware, so re-running a
+    # corruption that is already on disk would quietly change its published
+    # numbers. --only adds new corruptions without touching the existing ones.
+    parser.add_argument("--only", nargs="+", choices=list(degradations.CORRUPTIONS),
+                        help="Run only these corruptions and merge them into the existing results.")
     args = parser.parse_args()
 
     if not config.TEMPERATURE_PATH.exists():
@@ -101,10 +106,16 @@ def main() -> None:
     mc_model = U.build_mc_dropout_model(model)
     images_u8, labels = data.load_split("test")
 
+    out = config.METRIC_DIR / "uncertainty_evaluation.json"
     results: list[dict] = []
+    if args.only and out.exists():
+        results = [r for r in json.loads(out.read_text())["results"]
+                   if r["corruption"] not in args.only]
     start = time.time()
 
     for corruption in degradations.CORRUPTIONS:
+        if args.only and corruption not in args.only:
+            continue
         print(f"{corruption}:")
         for severity in range(config.NUM_SEVERITIES + 1):
             saved = config.PREDICTION_DIR / "degraded" / f"logits_{corruption}_s{severity}.npz"
@@ -167,7 +178,8 @@ def main() -> None:
             results.append(row)
         print()
 
-    out = config.METRIC_DIR / "uncertainty_evaluation.json"
+    order = list(degradations.CORRUPTIONS)
+    results.sort(key=lambda r: (order.index(r["corruption"]), r["severity"]))
     out.write_text(json.dumps({
         "temperature": temperature,
         "mc_samples": args.mc_samples,
@@ -190,7 +202,7 @@ def _series(results, corruption, method, field):
 
 def plot_confidence(results, path) -> None:
     """Mean confidence vs severity for each method, against true accuracy."""
-    fig, axes = plt.subplots(1, 3, figsize=(14, 4.2), sharey=True)
+    fig, axes = plt.subplots(1, len(degradations.CORRUPTIONS), figsize=(4.7 * len(degradations.CORRUPTIONS), 4.2), sharey=True)
     for ax, corruption in zip(axes, degradations.CORRUPTIONS):
         sev, acc = _series(results, corruption, "softmax", "accuracy")
         ax.plot(sev, acc, "o-", color="black", lw=2, label="accuracy (truth)")
@@ -212,7 +224,7 @@ def plot_confidence(results, path) -> None:
 
 def plot_separation(results, path) -> None:
     """Confidence separation (correct minus incorrect) -- the error-detection signal."""
-    fig, axes = plt.subplots(1, 3, figsize=(14, 4.2), sharey=True)
+    fig, axes = plt.subplots(1, len(degradations.CORRUPTIONS), figsize=(4.7 * len(degradations.CORRUPTIONS), 4.2), sharey=True)
     for ax, corruption in zip(axes, degradations.CORRUPTIONS):
         for method in config.UNCERTAINTY_METHODS:
             sev, sep = _series(results, corruption, method, "confidence_separation")

@@ -1,0 +1,214 @@
+2026-11-08 09:13:07.638872: I metal_plugin/src/device/metal_device.cc:1154] Metal device set to: Apple M4
+2026-11-08 09:13:07.639327: I metal_plugin/src/device/metal_device.cc:296] systemMemory: 24.00 GB
+2026-11-08 09:13:07.639382: I metal_plugin/src/device/metal_device.cc:313] maxCacheSize: 8.00 GB
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1794150787.639660 12616842 pluggable_device_factory.cc:305] Could not identify NUMA node of platform GPU ID 0, defaulting to 0. Your kernel may not have been built with NUMA support.
+I0000 00:00:1794150787.640360 12616842 pluggable_device_factory.cc:271] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 0 MB memory) -> physical PluggableDevice (device: 0, name: METAL, pci bus id: <undefined>)
+/Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/.venv/lib/python3.11/site-packages/keras/src/trainers/epoch_iterator.py:74: UserWarning: `shuffle=True` was passed, but will be ignored since the data `x` was provided as a tf.data.Dataset. The Dataset is expected to already be shuffled (via `.shuffle(buffer_size)`).
+  self.data_adapter = data_adapters.get_data_adapter(
+TensorFlow 2.18.1 | devices: ['CPU', 'GPU']
+train: 89,996 images | val: 10,004 images
+trainable parameters: 1,244,009
+Epoch 1/40
+2026-11-08 09:13:11.095005: I tensorflow/core/grappler/optimizers/custom_graph_optimizer_registry.cc:117] Plugin optimizer for device_type GPU is enabled.
+
+Epoch 1: val_loss improved from None to 1.88758, saving model to /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/models/ensemble_seed45.keras
+
+Epoch 1: finished saving model to /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/models/ensemble_seed45.keras
+704/704 - 252s - 357ms/step - accuracy: 0.8251 - loss: 0.5033 - val_accuracy: 0.5673 - val_loss: 1.8876 - learning_rate: 0.0010
+Epoch 2/40
+
+Epoch 2: val_loss improved from 1.88758 to 1.08635, saving model to /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/models/ensemble_seed45.keras
+
+Epoch 2: finished saving model to /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/models/ensemble_seed45.keras
+704/704 - 246s - 349ms/step - accuracy: 0.9279 - loss: 0.2167 - val_accuracy: 0.7317 - val_loss: 1.0863 - learning_rate: 0.0010
+Epoch 3/40
+
+Epoch 3: val_loss did not improve from 1.08635
+704/704 - 245s - 348ms/step - accuracy: 0.9479 - loss: 0.1584 - val_accuracy: 0.5131 - val_loss: 3.0382 - learning_rate: 0.0010
+Epoch 4/40
+
+Epoch 4: val_loss improved from 1.08635 to 0.50760, saving model to /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/models/ensemble_seed45.keras
+
+Epoch 4: finished saving model to /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/models/ensemble_seed45.keras
+704/704 - 257s - 365ms/step - accuracy: 0.9555 - loss: 0.1350 - val_accuracy: 0.8331 - val_loss: 0.5076 - learning_rate: 0.0010
+Epoch 5/40
+
+Epoch 5: val_loss improved from 0.50760 to 0.39738, saving model to /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/models/ensemble_seed45.keras
+
+Epoch 5: finished saving model to /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/models/ensemble_seed45.keras
+704/704 - 249s - 354ms/step - accuracy: 0.9642 - loss: 0.1097 - val_accuracy: 0.8659 - val_loss: 0.3974 - learning_rate: 0.0010
+Epoch 6/40
+
+Epoch 6: val_loss did not improve from 0.39738
+704/704 - 246s - 349ms/step - accuracy: 0.9645 - loss: 0.1086 - val_accuracy: 0.7509 - val_loss: 1.0978 - learning_rate: 0.0010
+Epoch 7/40
+
+Epoch 7: val_loss improved from 0.39738 to 0.18950, saving model to /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/models/ensemble_seed45.keras
+
+Epoch 7: finished saving model to /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/models/ensemble_seed45.keras
+704/704 - 245s - 349ms/step - accuracy: 0.9678 - loss: 0.0994 - val_accuracy: 0.9350 - val_loss: 0.1895 - learning_rate: 0.0010
+Epoch 8/40
+
+Epoch 8: val_loss did not improve from 0.18950
+704/704 - 246s - 350ms/step - accuracy: 0.9722 - loss: 0.0839 - val_accuracy: 0.6077 - val_loss: 1.6773 - learning_rate: 0.0010
+Epoch 9/40
+
+Epoch 9: val_loss did not improve from 0.18950
+704/704 - 247s - 352ms/step - accuracy: 0.9736 - loss: 0.0803 - val_accuracy: 0.9016 - val_loss: 0.3353 - learning_rate: 0.0010
+Epoch 10/40
+
+Epoch 10: val_loss did not improve from 0.18950
+704/704 - 246s - 350ms/step - accuracy: 0.9759 - loss: 0.0737 - val_accuracy: 0.9068 - val_loss: 0.2982 - learning_rate: 0.0010
+Epoch 11/40
+
+Epoch 11: val_loss did not improve from 0.18950
+
+Epoch 11: ReduceLROnPlateau reducing learning rate to 0.0005000000237487257.
+704/704 - 246s - 349ms/step - accuracy: 0.9764 - loss: 0.0733 - val_accuracy: 0.8049 - val_loss: 0.6702 - learning_rate: 0.0010
+Epoch 12/40
+
+Epoch 12: val_loss did not improve from 0.18950
+704/704 - 246s - 350ms/step - accuracy: 0.9849 - loss: 0.0464 - val_accuracy: 0.9458 - val_loss: 0.1998 - learning_rate: 5.0000e-04
+Epoch 13/40
+
+Epoch 13: val_loss improved from 0.18950 to 0.11760, saving model to /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/models/ensemble_seed45.keras
+
+Epoch 13: finished saving model to /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/models/ensemble_seed45.keras
+704/704 - 248s - 352ms/step - accuracy: 0.9851 - loss: 0.0463 - val_accuracy: 0.9606 - val_loss: 0.1176 - learning_rate: 5.0000e-04
+Epoch 14/40
+
+Epoch 14: val_loss did not improve from 0.11760
+704/704 - 248s - 352ms/step - accuracy: 0.9856 - loss: 0.0438 - val_accuracy: 0.9340 - val_loss: 0.2406 - learning_rate: 5.0000e-04
+Epoch 15/40
+
+Epoch 15: val_loss improved from 0.11760 to 0.11618, saving model to /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/models/ensemble_seed45.keras
+
+Epoch 15: finished saving model to /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/models/ensemble_seed45.keras
+704/704 - 268s - 380ms/step - accuracy: 0.9866 - loss: 0.0412 - val_accuracy: 0.9631 - val_loss: 0.1162 - learning_rate: 5.0000e-04
+Epoch 16/40
+
+Epoch 16: val_loss did not improve from 0.11618
+704/704 - 279s - 396ms/step - accuracy: 0.9874 - loss: 0.0386 - val_accuracy: 0.9410 - val_loss: 0.1851 - learning_rate: 5.0000e-04
+Epoch 17/40
+
+Epoch 17: val_loss did not improve from 0.11618
+704/704 - 272s - 386ms/step - accuracy: 0.9877 - loss: 0.0369 - val_accuracy: 0.9544 - val_loss: 0.1578 - learning_rate: 5.0000e-04
+Epoch 18/40
+
+Epoch 18: val_loss did not improve from 0.11618
+704/704 - 11103s - 16s/step - accuracy: 0.9887 - loss: 0.0350 - val_accuracy: 0.9485 - val_loss: 0.1803 - learning_rate: 5.0000e-04
+Epoch 19/40
+
+Epoch 19: val_loss did not improve from 0.11618
+
+Epoch 19: ReduceLROnPlateau reducing learning rate to 0.0002500000118743628.
+704/704 - 2121s - 3s/step - accuracy: 0.9877 - loss: 0.0374 - val_accuracy: 0.9336 - val_loss: 0.2097 - learning_rate: 5.0000e-04
+Epoch 20/40
+
+Epoch 20: val_loss improved from 0.11618 to 0.03881, saving model to /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/models/ensemble_seed45.keras
+
+Epoch 20: finished saving model to /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/models/ensemble_seed45.keras
+704/704 - 130s - 184ms/step - accuracy: 0.9911 - loss: 0.0271 - val_accuracy: 0.9877 - val_loss: 0.0388 - learning_rate: 2.5000e-04
+Epoch 21/40
+
+Epoch 21: val_loss improved from 0.03881 to 0.02517, saving model to /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/models/ensemble_seed45.keras
+
+Epoch 21: finished saving model to /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/models/ensemble_seed45.keras
+704/704 - 135s - 192ms/step - accuracy: 0.9915 - loss: 0.0263 - val_accuracy: 0.9929 - val_loss: 0.0252 - learning_rate: 2.5000e-04
+Epoch 22/40
+
+Epoch 22: val_loss did not improve from 0.02517
+704/704 - 137s - 195ms/step - accuracy: 0.9930 - loss: 0.0216 - val_accuracy: 0.9911 - val_loss: 0.0294 - learning_rate: 2.5000e-04
+Epoch 23/40
+
+Epoch 23: val_loss did not improve from 0.02517
+704/704 - 147s - 208ms/step - accuracy: 0.9926 - loss: 0.0226 - val_accuracy: 0.9749 - val_loss: 0.0819 - learning_rate: 2.5000e-04
+Epoch 24/40
+
+Epoch 24: val_loss did not improve from 0.02517
+704/704 - 144s - 205ms/step - accuracy: 0.9926 - loss: 0.0227 - val_accuracy: 0.9822 - val_loss: 0.0617 - learning_rate: 2.5000e-04
+Epoch 25/40
+
+Epoch 25: val_loss did not improve from 0.02517
+
+Epoch 25: ReduceLROnPlateau reducing learning rate to 0.0001250000059371814.
+704/704 - 153s - 217ms/step - accuracy: 0.9934 - loss: 0.0207 - val_accuracy: 0.8757 - val_loss: 0.5240 - learning_rate: 2.5000e-04
+Epoch 26/40
+
+Epoch 26: val_loss improved from 0.02517 to 0.02157, saving model to /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/models/ensemble_seed45.keras
+
+Epoch 26: finished saving model to /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/models/ensemble_seed45.keras
+704/704 - 154s - 219ms/step - accuracy: 0.9940 - loss: 0.0187 - val_accuracy: 0.9934 - val_loss: 0.0216 - learning_rate: 1.2500e-04
+Epoch 27/40
+
+Epoch 27: val_loss improved from 0.02157 to 0.02094, saving model to /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/models/ensemble_seed45.keras
+
+Epoch 27: finished saving model to /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/models/ensemble_seed45.keras
+704/704 - 151s - 215ms/step - accuracy: 0.9945 - loss: 0.0163 - val_accuracy: 0.9945 - val_loss: 0.0209 - learning_rate: 1.2500e-04
+Epoch 28/40
+
+Epoch 28: val_loss did not improve from 0.02094
+704/704 - 152s - 215ms/step - accuracy: 0.9947 - loss: 0.0167 - val_accuracy: 0.9857 - val_loss: 0.0472 - learning_rate: 1.2500e-04
+Epoch 29/40
+
+Epoch 29: val_loss did not improve from 0.02094
+704/704 - 152s - 216ms/step - accuracy: 0.9949 - loss: 0.0158 - val_accuracy: 0.9907 - val_loss: 0.0312 - learning_rate: 1.2500e-04
+Epoch 30/40
+
+Epoch 30: val_loss did not improve from 0.02094
+704/704 - 150s - 213ms/step - accuracy: 0.9949 - loss: 0.0158 - val_accuracy: 0.9933 - val_loss: 0.0222 - learning_rate: 1.2500e-04
+Epoch 31/40
+
+Epoch 31: val_loss did not improve from 0.02094
+
+Epoch 31: ReduceLROnPlateau reducing learning rate to 6.25000029685907e-05.
+704/704 - 151s - 215ms/step - accuracy: 0.9951 - loss: 0.0143 - val_accuracy: 0.9869 - val_loss: 0.0455 - learning_rate: 1.2500e-04
+Epoch 32/40
+
+Epoch 32: val_loss improved from 0.02094 to 0.01726, saving model to /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/models/ensemble_seed45.keras
+
+Epoch 32: finished saving model to /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/models/ensemble_seed45.keras
+704/704 - 152s - 216ms/step - accuracy: 0.9957 - loss: 0.0126 - val_accuracy: 0.9949 - val_loss: 0.0173 - learning_rate: 6.2500e-05
+Epoch 33/40
+
+Epoch 33: val_loss did not improve from 0.01726
+704/704 - 158s - 224ms/step - accuracy: 0.9961 - loss: 0.0120 - val_accuracy: 0.9939 - val_loss: 0.0203 - learning_rate: 6.2500e-05
+Epoch 34/40
+
+Epoch 34: val_loss did not improve from 0.01726
+704/704 - 153s - 218ms/step - accuracy: 0.9956 - loss: 0.0129 - val_accuracy: 0.9922 - val_loss: 0.0257 - learning_rate: 6.2500e-05
+Epoch 35/40
+
+Epoch 35: val_loss did not improve from 0.01726
+704/704 - 151s - 214ms/step - accuracy: 0.9964 - loss: 0.0112 - val_accuracy: 0.9932 - val_loss: 0.0247 - learning_rate: 6.2500e-05
+Epoch 36/40
+
+Epoch 36: val_loss did not improve from 0.01726
+
+Epoch 36: ReduceLROnPlateau reducing learning rate to 3.125000148429535e-05.
+704/704 - 152s - 215ms/step - accuracy: 0.9960 - loss: 0.0124 - val_accuracy: 0.9943 - val_loss: 0.0191 - learning_rate: 6.2500e-05
+Epoch 37/40
+
+Epoch 37: val_loss did not improve from 0.01726
+704/704 - 151s - 215ms/step - accuracy: 0.9968 - loss: 0.0104 - val_accuracy: 0.9937 - val_loss: 0.0212 - learning_rate: 3.1250e-05
+Epoch 38/40
+
+Epoch 38: val_loss did not improve from 0.01726
+704/704 - 153s - 218ms/step - accuracy: 0.9964 - loss: 0.0109 - val_accuracy: 0.9947 - val_loss: 0.0203 - learning_rate: 3.1250e-05
+Epoch 39/40
+
+Epoch 39: val_loss did not improve from 0.01726
+704/704 - 152s - 216ms/step - accuracy: 0.9966 - loss: 0.0108 - val_accuracy: 0.9950 - val_loss: 0.0193 - learning_rate: 3.1250e-05
+Epoch 40/40
+
+Epoch 40: val_loss did not improve from 0.01726
+
+Epoch 40: ReduceLROnPlateau reducing learning rate to 1.5625000742147677e-05.
+704/704 - 164s - 232ms/step - accuracy: 0.9967 - loss: 0.0103 - val_accuracy: 0.9950 - val_loss: 0.0183 - learning_rate: 3.1250e-05
+Epoch 40: early stopping
+Restoring model weights from the end of the best epoch: 32.
+
+Done in 344.2 min. Best epoch 32: val_loss=0.0173 val_accuracy=0.9949
+Model   -> /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/models/ensemble_seed45.keras
+History -> /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/metrics/ensemble_seed45_history.json

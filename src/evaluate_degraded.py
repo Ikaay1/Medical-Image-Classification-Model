@@ -25,6 +25,7 @@ each method is scored on byte-identical inputs and nothing has to be recomputed.
 
 from __future__ import annotations
 
+import argparse
 import json
 
 import matplotlib
@@ -86,7 +87,7 @@ def evaluate_one(
 
 def plot_accuracy(results: list[dict], path) -> None:
     """Accuracy and mean confidence against severity, one panel per corruption."""
-    fig, axes = plt.subplots(1, 3, figsize=(14, 4.2), sharey=True)
+    fig, axes = plt.subplots(1, len(degradations.CORRUPTIONS), figsize=(4.7 * len(degradations.CORRUPTIONS), 4.2), sharey=True)
 
     for ax, corruption in zip(axes, degradations.CORRUPTIONS):
         rows = sorted(
@@ -121,7 +122,8 @@ def plot_accuracy(results: list[dict], path) -> None:
 def plot_confidence_gap(results: list[dict], path) -> None:
     """Confidence on correct vs incorrect predictions, and the error counts."""
     fig, (ax_conf, ax_err) = plt.subplots(1, 2, figsize=(12, 4.2))
-    colors = {"gaussian_noise": "#3b6ea5", "gaussian_blur": "#4f9153", "contrast": "#c4452d"}
+    colors = {"gaussian_noise": "#3b6ea5", "gaussian_blur": "#4f9153", "contrast": "#c4452d",
+              "stain_shift": "#8d5fa8"}
 
     for corruption in degradations.CORRUPTIONS:
         rows = sorted(
@@ -173,7 +175,8 @@ def plot_confidence_gap(results: list[dict], path) -> None:
 def plot_examples(images_u8: np.ndarray, path, image_index: int = 0) -> None:
     """Show one image at every corruption and severity, so the scale is visible."""
     n_cols = config.NUM_SEVERITIES + 1
-    fig, axes = plt.subplots(3, n_cols, figsize=(1.7 * n_cols, 5.6))
+    n_rows = len(degradations.CORRUPTIONS)
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(1.7 * n_cols, 1.87 * n_rows))
 
     base = images_u8[image_index : image_index + 1].astype(np.float32) / 255.0
     for row, corruption in enumerate(degradations.CORRUPTIONS):
@@ -199,6 +202,12 @@ def plot_examples(images_u8: np.ndarray, path, image_index: int = 0) -> None:
 
 
 def main() -> None:
+    p = argparse.ArgumentParser(description="Evaluate the baseline on degraded test images.")
+    p.add_argument("--only", nargs="+", choices=list(degradations.CORRUPTIONS),
+                   help="Evaluate only these corruptions and merge them into the "
+                        "existing results, leaving the others' logits untouched.")
+    args = p.parse_args()
+
     if not config.BEST_MODEL_PATH.exists():
         raise SystemExit(f"No trained model at {config.BEST_MODEL_PATH}. Run: python -m src.train")
 
@@ -207,8 +216,15 @@ def main() -> None:
     images, labels = data.load_split("test")
     print(f"Test set: {len(labels):,} images\n")
 
+    out = config.METRIC_DIR / "degraded_evaluation.json"
     results: list[dict] = []
+    if args.only and out.exists():
+        results = [r for r in json.loads(out.read_text())["results"]
+                   if r["corruption"] not in args.only]
+
     for corruption in degradations.CORRUPTIONS:
+        if args.only and corruption not in args.only:
+            continue
         print(f"{corruption}:")
         for severity in range(config.NUM_SEVERITIES + 1):
             row = evaluate_one(model, images, labels, corruption, severity)
@@ -221,7 +237,8 @@ def main() -> None:
             )
         print()
 
-    out = config.METRIC_DIR / "degraded_evaluation.json"
+    order = list(degradations.CORRUPTIONS)
+    results.sort(key=lambda r: (order.index(r["corruption"]), r["severity"]))
     out.write_text(json.dumps({"n_test": int(len(labels)), "results": results}, indent=2))
 
     plot_accuracy(results, config.FIGURE_DIR / "degradation_accuracy.png")

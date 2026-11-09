@@ -124,6 +124,11 @@ SEVERITY_LEVELS = {
     "gaussian_blur": [0.6, 0.8, 0.9, 1.2, 1.6],
     # Contrast multiplier; smaller means more washed out.
     "contrast": [0.85, 0.8, 0.7, 0.65, 0.6],
+    # Added Weeks 10-12. Bound on the log of each slide's random haematoxylin
+    # and eosin factors: severity 1 lets a slide carry 0.74x-1.35x its usual
+    # dye, severity 5 0.25x-4x. Unlike contrast, accuracy falls monotonically
+    # across the whole sweep, so the levels sit cleanly on the targets.
+    "stain_shift": [0.3, 0.5, 0.7, 1.0, 1.4],
 }
 
 # --------------------------------------------------------------------------
@@ -160,3 +165,39 @@ UNCERTAINTY_DIR.mkdir(parents=True, exist_ok=True)
 
 # The three methods compared from Milestone 3 onward.
 UNCERTAINTY_METHODS = ("softmax", "temperature", "mc_dropout")
+
+# --------------------------------------------------------------------------
+# Deep ensemble (Weeks 10-12)
+# --------------------------------------------------------------------------
+# Five copies of the same architecture, trained on the same data with
+# different random seeds (Lakshminarayanan et al., 2017). The seeds change the
+# weight initialisation, the dropout masks and the batch order, so the members
+# land in different minima and disagree most where the data is unfamiliar.
+#
+# The existing baseline (seed 42) is the first member, so every result from
+# Milestones 1-4 is the single-model case of this ensemble. Members are run
+# deterministically (dropout off): the ensemble's diversity comes from training,
+# not from sampling at prediction time.
+ENSEMBLE_MEMBERS = {
+    BASELINE_MODEL_NAME: SEED,
+    "ensemble_seed43": 43,
+    "ensemble_seed44": 44,
+    "ensemble_seed45": 45,
+    "ensemble_seed46": 46,
+}
+
+# Methods scored for error detection from Weeks 10-12 onward: the Milestone 3
+# three plus the ensemble. UNCERTAINTY_METHODS above stays as it was, because
+# evaluate_uncertainty.py produces exactly those three.
+DETECTION_METHODS = UNCERTAINTY_METHODS + ("ensemble",)
+
+# Bootstrap resamples of the held-out test images for confidence intervals.
+# 1,000 is the usual minimum for stable 95% percentile intervals.
+BOOTSTRAP_RESAMPLES = 1000
+
+# Smallest difference treated as practically meaningful, on the 0-1 scale of
+# AUROC, ECE, AURC and accuracy. Paired intervals are narrow enough that
+# temperature scaling's AUROC shifts of ~0.003 come out "significant", which is
+# true and irrelevant. 0.01 is a judgement call, not a statistical quantity; it
+# also sits above MC Dropout's run-to-run noise floor (~0.004 accuracy).
+PRACTICAL_DIFFERENCE = 0.01

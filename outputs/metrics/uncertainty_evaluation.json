@@ -956,6 +956,324 @@
         "errors_above_99_confidence": 0,
         "temperature": 4.800003641428591
       }
+    },
+    {
+      "corruption": "stain_shift",
+      "severity": 0,
+      "parameter": "clean",
+      "methods": {
+        "softmax": {
+          "accuracy": 0.9348189415041783,
+          "mean_confidence": 0.9697393178939819,
+          "confidence_minus_accuracy": 0.03492037638980361,
+          "mean_confidence_correct": 0.9832080602645874,
+          "mean_confidence_incorrect": 0.7765725255012512,
+          "confidence_separation": 0.20663553476333618,
+          "mean_entropy": 0.08015813678503036,
+          "n_errors": 468,
+          "errors_above_99_confidence": 96
+        },
+        "temperature": {
+          "accuracy": 0.9348189415041783,
+          "mean_confidence": 0.9595873951911926,
+          "confidence_minus_accuracy": 0.024768453687014302,
+          "mean_confidence_correct": 0.975251317024231,
+          "mean_confidence_incorrect": 0.7349361181259155,
+          "confidence_separation": 0.24031519889831543,
+          "mean_entropy": 0.11379466205835342,
+          "n_errors": 468,
+          "errors_above_99_confidence": 59
+        },
+        "mc_dropout": {
+          "accuracy": 0.942200557103064,
+          "mean_confidence": 0.9611889123916626,
+          "confidence_minus_accuracy": 0.018988355288598546,
+          "mean_confidence_correct": 0.9743698835372925,
+          "mean_confidence_incorrect": 0.7463241219520569,
+          "confidence_separation": 0.2280457615852356,
+          "mean_entropy": 0.10771415382623672,
+          "n_errors": 415,
+          "errors_above_99_confidence": 57,
+          "mean_mutual_information": 0.031003260985016823
+        }
+      },
+      "oracle_temperature": {
+        "accuracy": 0.9348189415041783,
+        "mean_confidence": 0.930788516998291,
+        "confidence_minus_accuracy": -0.004030424505887309,
+        "mean_confidence_correct": 0.9500539898872375,
+        "mean_confidence_incorrect": 0.6544852256774902,
+        "confidence_separation": 0.2955687642097473,
+        "mean_entropy": 0.2182454764842987,
+        "n_errors": 468,
+        "errors_above_99_confidence": 8,
+        "temperature": 1.8850107525225055
+      }
+    },
+    {
+      "corruption": "stain_shift",
+      "severity": 1,
+      "parameter": "sigma=0.3",
+      "methods": {
+        "softmax": {
+          "accuracy": 0.8278551532033426,
+          "mean_confidence": 0.9491952657699585,
+          "confidence_minus_accuracy": 0.12134011256661592,
+          "mean_confidence_correct": 0.9726579785346985,
+          "mean_confidence_incorrect": 0.8363614678382874,
+          "confidence_separation": 0.13629651069641113,
+          "mean_entropy": 0.1315891146659851,
+          "n_errors": 1236,
+          "errors_above_99_confidence": 397
+        },
+        "temperature": {
+          "accuracy": 0.8278551532033426,
+          "mean_confidence": 0.9338404536247253,
+          "confidence_minus_accuracy": 0.10598530042138277,
+          "mean_confidence_correct": 0.9616221785545349,
+          "mean_confidence_incorrect": 0.8002364039421082,
+          "confidence_separation": 0.16138577461242676,
+          "mean_entropy": 0.1777929961681366,
+          "n_errors": 1236,
+          "errors_above_99_confidence": 262
+        },
+        "mc_dropout": {
+          "accuracy": 0.8526462395543175,
+          "mean_confidence": 0.9290375113487244,
+          "confidence_minus_accuracy": 0.07639127179440686,
+          "mean_confidence_correct": 0.9552335143089294,
+          "mean_confidence_incorrect": 0.7774580121040344,
+          "confidence_separation": 0.17777550220489502,
+          "mean_entropy": 0.18777337670326233,
+          "n_errors": 1058,
+          "errors_above_99_confidence": 145,
+          "mean_mutual_information": 0.05421752110123634
+        }
+      },
+      "oracle_temperature": {
+        "accuracy": 0.8278551532033426,
+        "mean_confidence": 0.8313890695571899,
+        "confidence_minus_accuracy": 0.003533916353847366,
+        "mean_confidence_correct": 0.8724740743637085,
+        "mean_confidence_incorrect": 0.6338089108467102,
+        "confidence_separation": 0.2386651635169983,
+        "mean_entropy": 0.5355092287063599,
+        "n_errors": 1236,
+        "errors_above_99_confidence": 11,
+        "temperature": 2.694031681118177
+      }
+    },
+    {
+      "corruption": "stain_shift",
+      "severity": 2,
+      "parameter": "sigma=0.5",
+      "methods": {
+        "softmax": {
+          "accuracy": 0.707799442896936,
+          "mean_confidence": 0.9338457584381104,
+          "confidence_minus_accuracy": 0.22604631554117438,
+          "mean_confidence_correct": 0.9617039561271667,
+          "mean_confidence_incorrect": 0.8663644194602966,
+          "confidence_separation": 0.09533953666687012,
+          "mean_entropy": 0.1747237890958786,
+          "n_errors": 2098,
+          "errors_above_99_confidence": 767
+        },
+        "temperature": {
+          "accuracy": 0.707799442896936,
+          "mean_confidence": 0.9132382869720459,
+          "confidence_minus_accuracy": 0.20543884407510993,
+          "mean_confidence_correct": 0.9471543431282043,
+          "mean_confidence_incorrect": 0.8310829401016235,
+          "confidence_separation": 0.11607140302658081,
+          "mean_entropy": 0.23669128119945526,
+          "n_errors": 2098,
+          "errors_above_99_confidence": 554
+        },
+        "mc_dropout": {
+          "accuracy": 0.7197771587743732,
+          "mean_confidence": 0.8988131880760193,
+          "confidence_minus_accuracy": 0.17903602930164608,
+          "mean_confidence_correct": 0.9392906427383423,
+          "mean_confidence_incorrect": 0.7948431372642517,
+          "confidence_separation": 0.14444750547409058,
+          "mean_entropy": 0.2637801766395569,
+          "n_errors": 2012,
+          "errors_above_99_confidence": 393,
+          "mean_mutual_information": 0.07279767096042633
+        }
+      },
+      "oracle_temperature": {
+        "accuracy": 0.707799442896936,
+        "mean_confidence": 0.7087111473083496,
+        "confidence_minus_accuracy": 0.0009117044114136386,
+        "mean_confidence_correct": 0.7658705711364746,
+        "mean_confidence_incorrect": 0.5702533721923828,
+        "confidence_separation": 0.1956171989440918,
+        "mean_entropy": 0.9256320595741272,
+        "n_errors": 2098,
+        "errors_above_99_confidence": 8,
+        "temperature": 3.525740666378522
+      }
+    },
+    {
+      "corruption": "stain_shift",
+      "severity": 3,
+      "parameter": "sigma=0.7",
+      "methods": {
+        "softmax": {
+          "accuracy": 0.5981894150417827,
+          "mean_confidence": 0.9225893616676331,
+          "confidence_minus_accuracy": 0.32439994662585037,
+          "mean_confidence_correct": 0.9528858661651611,
+          "mean_confidence_incorrect": 0.8774859309196472,
+          "confidence_separation": 0.07539993524551392,
+          "mean_entropy": 0.204862579703331,
+          "n_errors": 2885,
+          "errors_above_99_confidence": 1155
+        },
+        "temperature": {
+          "accuracy": 0.5981894150417827,
+          "mean_confidence": 0.8983899354934692,
+          "confidence_minus_accuracy": 0.30020052045168655,
+          "mean_confidence_correct": 0.9350714683532715,
+          "mean_confidence_incorrect": 0.8437809944152832,
+          "confidence_separation": 0.09129047393798828,
+          "mean_entropy": 0.277935266494751,
+          "n_errors": 2885,
+          "errors_above_99_confidence": 863
+        },
+        "mc_dropout": {
+          "accuracy": 0.6137883008356546,
+          "mean_confidence": 0.8849483132362366,
+          "confidence_minus_accuracy": 0.27116001240058196,
+          "mean_confidence_correct": 0.9262133836746216,
+          "mean_confidence_incorrect": 0.8193676471710205,
+          "confidence_separation": 0.10684573650360107,
+          "mean_entropy": 0.30305591225624084,
+          "n_errors": 2773,
+          "errors_above_99_confidence": 681,
+          "mean_mutual_information": 0.08234971761703491
+        }
+      },
+      "oracle_temperature": {
+        "accuracy": 0.5981894150417827,
+        "mean_confidence": 0.5943512916564941,
+        "confidence_minus_accuracy": -0.00383812338528855,
+        "mean_confidence_correct": 0.6536925435066223,
+        "mean_confidence_incorrect": 0.5060079097747803,
+        "confidence_separation": 0.14768463373184204,
+        "mean_entropy": 1.2651485204696655,
+        "n_errors": 2885,
+        "errors_above_99_confidence": 0,
+        "temperature": 4.434127489712054
+      }
+    },
+    {
+      "corruption": "stain_shift",
+      "severity": 4,
+      "parameter": "sigma=1",
+      "methods": {
+        "softmax": {
+          "accuracy": 0.4694986072423398,
+          "mean_confidence": 0.9047802686691284,
+          "confidence_minus_accuracy": 0.4352816614267886,
+          "mean_confidence_correct": 0.9418323636054993,
+          "mean_confidence_incorrect": 0.8719887733459473,
+          "confidence_separation": 0.069843590259552,
+          "mean_entropy": 0.25300344824790955,
+          "n_errors": 3809,
+          "errors_above_99_confidence": 1543
+        },
+        "temperature": {
+          "accuracy": 0.4694986072423398,
+          "mean_confidence": 0.8762182593345642,
+          "confidence_minus_accuracy": 0.4067196520922244,
+          "mean_confidence_correct": 0.9200032949447632,
+          "mean_confidence_incorrect": 0.8374680280685425,
+          "confidence_separation": 0.0825352668762207,
+          "mean_entropy": 0.3387815058231354,
+          "n_errors": 3809,
+          "errors_above_99_confidence": 1159
+        },
+        "mc_dropout": {
+          "accuracy": 0.47479108635097494,
+          "mean_confidence": 0.8648285269737244,
+          "confidence_minus_accuracy": 0.3900374406227494,
+          "mean_confidence_correct": 0.9148896932601929,
+          "mean_confidence_incorrect": 0.8195730447769165,
+          "confidence_separation": 0.09531664848327637,
+          "mean_entropy": 0.3563896119594574,
+          "n_errors": 3771,
+          "errors_above_99_confidence": 941,
+          "mean_mutual_information": 0.0943499207496643
+        }
+      },
+      "oracle_temperature": {
+        "accuracy": 0.4694986072423398,
+        "mean_confidence": 0.4575482904911041,
+        "confidence_minus_accuracy": -0.011950316751235701,
+        "mean_confidence_correct": 0.513776957988739,
+        "mean_confidence_incorrect": 0.40778541564941406,
+        "confidence_separation": 0.10599154233932495,
+        "mean_entropy": 1.628591537475586,
+        "n_errors": 3809,
+        "errors_above_99_confidence": 0,
+        "temperature": 5.856445073350542
+      }
+    },
+    {
+      "corruption": "stain_shift",
+      "severity": 5,
+      "parameter": "sigma=1.4",
+      "methods": {
+        "softmax": {
+          "accuracy": 0.36448467966573816,
+          "mean_confidence": 0.8812969326972961,
+          "confidence_minus_accuracy": 0.516812253031558,
+          "mean_confidence_correct": 0.9227775931358337,
+          "mean_confidence_incorrect": 0.8575067520141602,
+          "confidence_separation": 0.06527084112167358,
+          "mean_entropy": 0.3155859112739563,
+          "n_errors": 4563,
+          "errors_above_99_confidence": 1674
+        },
+        "temperature": {
+          "accuracy": 0.36448467966573816,
+          "mean_confidence": 0.8476062417030334,
+          "confidence_minus_accuracy": 0.4831215620372953,
+          "mean_confidence_correct": 0.8969627618789673,
+          "mean_confidence_incorrect": 0.8192991018295288,
+          "confidence_separation": 0.07766366004943848,
+          "mean_entropy": 0.41569340229034424,
+          "n_errors": 4563,
+          "errors_above_99_confidence": 1277
+        },
+        "mc_dropout": {
+          "accuracy": 0.3649025069637883,
+          "mean_confidence": 0.8409388065338135,
+          "confidence_minus_accuracy": 0.4760362995700252,
+          "mean_confidence_correct": 0.8952293992042542,
+          "mean_confidence_incorrect": 0.8097456097602844,
+          "confidence_separation": 0.08548378944396973,
+          "mean_entropy": 0.42561519145965576,
+          "n_errors": 4560,
+          "errors_above_99_confidence": 1051,
+          "mean_mutual_information": 0.11199934035539627
+        }
+      },
+      "oracle_temperature": {
+        "accuracy": 0.36448467966573816,
+        "mean_confidence": 0.3423888087272644,
+        "confidence_minus_accuracy": -0.02209587093847376,
+        "mean_confidence_correct": 0.38512006402015686,
+        "mean_confidence_incorrect": 0.3178812563419342,
+        "confidence_separation": 0.06723880767822266,
+        "mean_entropy": 1.8861287832260132,
+        "n_errors": 4563,
+        "errors_above_99_confidence": 0,
+        "temperature": 7.713366323528391
+      }
     }
   ]
 }

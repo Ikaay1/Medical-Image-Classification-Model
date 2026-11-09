@@ -16,6 +16,7 @@ degraded images that differ from its training data?
 | 2 | Image degradations (Gaussian noise, blur, contrast) + accuracy under shift | **Done** (results below) |
 | 3 | Uncertainty methods: softmax confidence, temperature scaling, MC Dropout | **Done** (results below) |
 | 4 | Misclassification-detection metrics (AUROC, calibration error) | **Done** (results below) |
+| Weeks 10–12 | Deep ensemble, bootstrap confidence intervals, stain shift, shift detection | **Done** (results below) |
 | 5 | Final comparison, figures, written analysis | Not started |
 
 ---
@@ -406,6 +407,153 @@ specific model, so they do not transfer.
 
 ---
 
+## Weeks 10–12 results — more methods, more corruption, and how sure are we?
+
+Milestone 4 left four gaps, and this stage closes each with a new experiment
+rather than more writing:
+
+| Gap | Experiment | Script |
+|-----|------------|--------|
+| Only one "proper" Bayesian-style method (MC Dropout) | **Deep ensemble**: 4 more networks trained from seeds 43–46; the baseline (seed 42) is member 1 | `train --name`, `evaluate_ensemble` |
+| Single numbers, no error bars | **Paired bootstrap**: 1,000 resamples of the 4,680 held-out images, 95% intervals on every metric and every pairwise difference | `bootstrap_ci` |
+| Corruptions were generic, not histology-specific | **Stain shift**: per-image random change in haematoxylin and eosin dye strength via HED colour deconvolution | `degradations.stain_shift` |
+| "Mutual information is a shift detector" was an inference | **Shift detection**: can each score tell clean images from corrupted ones, per image and averaged over batches of 10 and 50? | `evaluate_shift_detection` |
+
+Everything is scored on the same 4,680 held-out test images as Milestone 4. The
+earlier corruptions, logits and MC Dropout results were not recomputed. Every
+script that adds a corruption takes `--only`, so the existing results are
+merged rather than overwritten. That matters because MC Dropout is not
+bit-reproducible on this hardware.
+
+### Stain shift is the most dangerous corruption
+
+Severity levels were calibrated the same way as before (`calibrate_severity --only
+stain_shift`): σ = 0.3, 0.5, 0.7, 1.0, 1.4. Each image's two dye amounts are
+multiplied by a factor drawn from exp(U(−σ, σ)), so s1 means 0.74×–1.35× dye and
+s5 means 0.25×–4×. White background stays white, and decompose → recompose
+round-trips to within 1e-6.
+
+| Severity (full test set) | Accuracy | Mean confidence | Overconfidence gap |
+|---|---|---|---|
+| clean | 0.935 | 0.970 | +0.035 |
+| s1 | 0.828 | 0.949 | +0.121 |
+| s3 | 0.598 | 0.923 | +0.324 |
+| s5 | 0.364 | 0.881 | **+0.517** |
+
+This is the largest overconfidence gap of any corruption. At s5, 37% of all errors
+(1,674 of 4,563) are made with more than 99% confidence. A recoloured slide looks
+like a perfectly ordinary slide to the network. An oracle temperature fitted on
+the shifted data itself would close the gap (T rises from 2.7 to 7.7), but no
+single temperature fitted on clean data can.
+
+### Deep ensemble
+
+Every member reached a best validation accuracy of 0.994–0.995, so the five
+networks are equally good on clean data. They disagree a great deal under shift:
+
+- **Retraining moves the result more than resampling the test set.** Across the 20
+  shifted conditions, the five members' error-detection AUROCs span a median
+  0.053, and up to 0.150 under noise s5. The bootstrap 95% interval for one model
+  is a median 0.030 wide. A confidence interval over test images understates how
+  uncertain a single-model result is, because a different random seed would give
+  a different model.
+- **The baseline is a lucky draw.** It ranks first or second of the five on
+  accuracy in 18 of 21 conditions. Comparing "ensemble vs softmax" is
+  therefore comparing the ensemble against the best of five draws. Against a
+  typical member, the ensemble has higher AUROC in 16 of 20 shifted conditions
+  and higher accuracy in 15.
+- **The gains are concentrated in blur and contrast**, the two corruptions where
+  MC Dropout did not help:
+
+| AUROC (held-out) | softmax | MC Dropout | ensemble |
+|---|---|---|---|
+| blur s4 | 0.603 | 0.601 | **0.684** |
+| blur s5 | 0.610 | 0.604 | **0.710** |
+| contrast s3 | 0.666 | 0.631 | **0.772** |
+| contrast s4 | 0.630 | 0.598 | **0.713** |
+| noise s2 | 0.777 | **0.815** | 0.746 |
+| noise s5 | 0.769 | **0.770** | 0.688 |
+
+  Under contrast, the ensemble's ECE stays between 0.115 and 0.136 at every
+  severity, while softmax rises to 0.49. Under noise, the ensemble is worse than
+  the lucky baseline, and MC Dropout remains the best method.
+- **Adding members is not smooth** (`ensemble_size.png`). With five members,
+  AUROC at a given severity moves by up to 0.14 depending on which member is
+  added next. The ensemble is still in the regime where individual members
+  matter, so five is a floor, not a plateau.
+
+### Which differences are real?
+
+A difference is called *real* only when its paired 95% interval excludes zero
+**and** it is at least 0.01 in size. Tallies are over the 20 shifted conditions:
+
+| Comparison (AUROC) | A better | B better | Negligible / indistinguishable |
+|---|---|---|---|
+| softmax vs temperature | 0 | 0 | 20 |
+| softmax vs MC Dropout | 5 | 9 | 6 |
+| softmax vs ensemble | 5 | 12 | 3 |
+| MC Dropout vs ensemble | 8 | 8 | 4 |
+
+- **Temperature scaling never changes error detection by a meaningful amount**,
+  but it improves ECE in all 20 of 20 shifted conditions. This confirms the
+  Milestone 4 claim with error bars.
+- **MC Dropout vs ensemble is a genuine draw**, 8 conditions each, split along
+  corruption lines. MC Dropout wins all 5 noise conditions and 3 of 5 stain
+  conditions by 0.015–0.082. The ensemble wins 4 of 5 blur and 4 of 5 contrast
+  conditions by 0.030–0.140.
+- **On clean data, MC Dropout is measurably worse than softmax** (−0.012 AUROC,
+  interval excludes zero). Its sampling adds noise to an already good ranking.
+
+### Shift detection: MI detects shift, and batches make it reliable
+
+AUROC for telling clean images from shifted ones, with clean and shifted images
+drawn from disjoint halves of the held-out set:
+
+| Score | per image, s1 | per image, s5 | batch of 50, s1 |
+|---|---|---|---|
+| softmax 1 − confidence | 0.57–0.68 | 0.74–0.89 | 0.79–0.95 |
+| softmax entropy | 0.57–0.68 | 0.74–0.90 | 0.83–0.98 |
+| MC Dropout MI | 0.58–0.68 | 0.77–0.87 | 0.88–0.98 |
+| ensemble MI | 0.57–0.68 | **0.78–0.97** | **0.91–1.00** |
+
+(Ranges are across the four corruptions.)
+
+- **Per image, no score is a dependable shift alarm.** At mild severity every
+  score is 0.57–0.68.
+- **Averaging over a batch fixes this.** For batches of 50, every score reaches
+  about 1.0 from severity 2 onward. Ensemble MI is the best or tied-best score in
+  almost every cell.
+- **Detecting shift is not the same as detecting errors.** Contrast is the
+  easiest corruption to detect (ensemble MI 0.975 per image at s5), yet error
+  detection under contrast is among the worst (AUROC 0.59–0.63). A monitor can
+  know the data has gone wrong without knowing which predictions are wrong.
+- **Mild stain shift is the silent failure.** At s1 accuracy has already lost
+  11 points, but per-image detection is 0.57 and even a batch of 50 only
+  reaches 0.79–0.91.
+
+### Blur s5: the most confident predictions are the wrong ones
+
+`risk_coverage.png` now shows all four corruptions at s5. Under blur, the 5% most
+confident predictions are 0% accurate. 408 of the 468 most confident predictions
+are mucus tissue called "background" with confidence ≈ 1.0, and lymphocyte recall
+falls to zero. Abstaining on low-confidence images therefore makes things worse
+at first, and the risk curve is U-shaped. This is not a float32 tie artefact:
+ranking by logit margin gives the same result. It is the clearest single example
+in the project of confidence being actively misleading under shift.
+
+### What the final report inherits
+
+- The answer to the research question is still conditional, and it is now
+  backed by intervals. No single method wins. MC Dropout is best under noise and
+  slightly ahead under stain shift; the ensemble is best under blur and contrast.
+  Temperature scaling helps calibration and never discrimination.
+- **Seed variance is the largest uncertainty in the whole study**, larger than
+  test-set sampling. Any single-model comparison should be read in that light.
+- Cost: the ensemble needs 5 trainings and 5 forward passes. MC Dropout needs 1
+  training and 30 forward passes. Softmax and temperature need 1 of each.
+
+---
+
 ## Setup
 
 Requires Homebrew Python 3.11 (see "Why Python 3.11" below).
@@ -463,6 +611,26 @@ python3.11 -m venv .venv
 
 # AUROC, calibration error and risk-coverage for every method (~1 min)
 .venv/bin/python -m src.evaluate_detection
+
+# --- Weeks 10-12 ---
+
+# Add stain shift to the existing results without recomputing the others.
+# --only merges into the JSON files instead of overwriting them.
+.venv/bin/python -m src.calibrate_severity --only stain_shift
+.venv/bin/python -m src.evaluate_degraded --only stain_shift
+.venv/bin/python -m src.evaluate_uncertainty --only stain_shift
+
+# Train the four extra ensemble members (~2 hours each at full speed)
+for s in 43 44 45 46; do .venv/bin/python -m src.train --seed $s --name ensemble_seed$s; done
+
+# Combine the five members over every condition (~5 min; member logits are cached)
+.venv/bin/python -m src.evaluate_ensemble
+
+# Re-run detection with the ensemble included, then shift detection and the
+# 1,000-resample paired bootstrap (~3 min together)
+.venv/bin/python -m src.evaluate_detection
+.venv/bin/python -m src.evaluate_shift_detection
+.venv/bin/python -m src.bootstrap_ci
 ```
 
 Artifacts land in `outputs/` (git-ignored):
@@ -496,6 +664,20 @@ outputs/figures/detection_calibration.png
 outputs/figures/reliability_diagrams.png
 outputs/figures/risk_coverage.png
 outputs/figures/score_comparison.png
+
+outputs/models/ensemble_seed4{3..6}.keras        the four extra ensemble members
+outputs/metrics/ensemble_seed4*_history.json
+outputs/metrics/ensemble_evaluation.json      per-member, ensemble and by-size metrics
+outputs/predictions/ensemble/*.npz            cached per-member logits
+outputs/predictions/uncertainty/ensemble_*.npz mean probabilities + mutual information
+outputs/metrics/bootstrap_ci.json             95% intervals and paired differences
+outputs/metrics/shift_detection.json
+outputs/logs/                                 training and evaluation logs
+outputs/figures/ensemble_members.png
+outputs/figures/ensemble_size.png
+outputs/figures/detection_auroc_ci.png
+outputs/figures/shift_detection.png
+outputs/figures/training_curves_ensemble_seed4*.png
 ```
 
 ---
@@ -615,7 +797,7 @@ src/data.py                download, loading, tf.data pipelines, augmentation
 src/model.py               baseline CNN (1.24M parameters)
 src/train.py               training loop, callbacks, curves
 src/evaluate.py            clean-split metrics, logits, confusion matrix
-src/degradations.py        the three corruptions + severity registry
+src/degradations.py        the four corruptions (incl. HED stain shift) + severity registry
 src/calibrate_severity.py  empirical choice of severity levels
 src/evaluate_degraded.py   metrics, logits and figures under degradation
 src/uncertainty.py         the three methods + MC Dropout model surgery
@@ -624,4 +806,7 @@ src/evaluate_uncertainty.py  all methods over all conditions
 src/evaluate_heldout.py    rescore without the severity-calibration images
 src/metrics.py             AUROC, calibration error, risk-coverage
 src/evaluate_detection.py  Milestone 4 metrics and figures
+src/evaluate_ensemble.py   deep ensemble: combine members, spread, size curve
+src/bootstrap_ci.py        paired bootstrap intervals for every metric and method pair
+src/evaluate_shift_detection.py  clean-vs-shifted detection, per image and per batch
 ```

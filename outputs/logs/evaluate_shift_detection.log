@@ -1,0 +1,26 @@
+Methods on disk: ['softmax', 'temperature', 'mc_dropout', 'ensemble']
+Clean half 2,340 images, shifted half 2,340 images
+
+gaussian_noise  s1 | softmax_conf 0.645/0.751/0.930  softmax_entropy 0.646/0.788/0.960  mc_dropout_mi 0.651/0.830/0.984  ensemble_mi 0.679/0.878/0.993
+gaussian_noise  s2 | softmax_conf 0.697/0.866/0.994  softmax_entropy 0.698/0.901/0.998  mc_dropout_mi 0.704/0.917/0.999  ensemble_mi 0.742/0.964/1.000
+gaussian_noise  s3 | softmax_conf 0.733/0.931/1.000  softmax_entropy 0.734/0.957/1.000  mc_dropout_mi 0.747/0.969/1.000  ensemble_mi 0.777/0.989/1.000
+gaussian_noise  s4 | softmax_conf 0.737/0.921/1.000  softmax_entropy 0.739/0.950/1.000  mc_dropout_mi 0.769/0.978/1.000  ensemble_mi 0.793/0.989/1.000
+gaussian_noise  s5 | softmax_conf 0.736/0.923/0.999  softmax_entropy 0.739/0.952/1.000  mc_dropout_mi 0.780/0.979/1.000  ensemble_mi 0.798/0.990/1.000
+gaussian_blur   s1 | softmax_conf 0.599/0.757/0.941  softmax_entropy 0.602/0.797/0.972  mc_dropout_mi 0.610/0.749/0.929  ensemble_mi 0.639/0.859/0.991
+gaussian_blur   s2 | softmax_conf 0.728/0.884/0.997  softmax_entropy 0.732/0.927/1.000  mc_dropout_mi 0.732/0.913/0.999  ensemble_mi 0.723/0.954/1.000
+gaussian_blur   s3 | softmax_conf 0.753/0.911/0.999  softmax_entropy 0.758/0.951/1.000  mc_dropout_mi 0.753/0.947/1.000  ensemble_mi 0.739/0.974/1.000
+gaussian_blur   s4 | softmax_conf 0.760/0.947/1.000  softmax_entropy 0.766/0.971/1.000  mc_dropout_mi 0.758/0.970/1.000  ensemble_mi 0.766/0.994/1.000
+gaussian_blur   s5 | softmax_conf 0.771/0.956/1.000  softmax_entropy 0.778/0.980/1.000  mc_dropout_mi 0.768/0.976/1.000  ensemble_mi 0.775/0.997/1.000
+contrast        s1 | softmax_conf 0.679/0.775/0.953  softmax_entropy 0.678/0.816/0.977  mc_dropout_mi 0.683/0.792/0.965  ensemble_mi 0.681/0.880/0.996
+contrast        s2 | softmax_conf 0.731/0.849/0.989  softmax_entropy 0.731/0.891/0.997  mc_dropout_mi 0.728/0.848/0.988  ensemble_mi 0.775/0.974/1.000
+contrast        s3 | softmax_conf 0.827/0.962/1.000  softmax_entropy 0.831/0.985/1.000  mc_dropout_mi 0.815/0.974/1.000  ensemble_mi 0.917/1.000/1.000
+contrast        s4 | softmax_conf 0.867/0.988/1.000  softmax_entropy 0.872/0.996/1.000  mc_dropout_mi 0.851/0.991/1.000  ensemble_mi 0.956/1.000/1.000
+contrast        s5 | softmax_conf 0.888/0.990/1.000  softmax_entropy 0.895/0.998/1.000  mc_dropout_mi 0.874/0.995/1.000  ensemble_mi 0.975/1.000/1.000
+stain_shift     s1 | softmax_conf 0.566/0.645/0.795  softmax_entropy 0.566/0.664/0.833  mc_dropout_mi 0.580/0.695/0.882  ensemble_mi 0.567/0.724/0.914
+stain_shift     s2 | softmax_conf 0.622/0.753/0.907  softmax_entropy 0.623/0.790/0.947  mc_dropout_mi 0.643/0.840/0.983  ensemble_mi 0.647/0.899/0.996
+stain_shift     s3 | softmax_conf 0.669/0.795/0.962  softmax_entropy 0.670/0.847/0.986  mc_dropout_mi 0.688/0.885/0.996  ensemble_mi 0.734/0.971/1.000
+stain_shift     s4 | softmax_conf 0.704/0.856/0.994  softmax_entropy 0.706/0.900/0.999  mc_dropout_mi 0.733/0.931/1.000  ensemble_mi 0.801/0.992/1.000
+stain_shift     s5 | softmax_conf 0.742/0.922/0.999  softmax_entropy 0.745/0.956/1.000  mc_dropout_mi 0.768/0.964/1.000  ensemble_mi 0.855/0.999/1.000
+
+(columns are batch sizes 1/10/50)
+Metrics -> /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/metrics/shift_detection.json

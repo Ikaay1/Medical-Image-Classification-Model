@@ -1,0 +1,69 @@
+1000 resamples of 4,680 held-out images | methods: ['softmax', 'temperature', 'mc_dropout', 'ensemble']
+
+gaussian_noise  s0  AUROC softmax 0.924 [0.910, 0.936]  temperature 0.924 [0.910, 0.936]  mc_dropout 0.912 [0.896, 0.927]  ensemble 0.924 [0.911, 0.937]
+gaussian_noise  s1  AUROC softmax 0.828 [0.815, 0.843]  temperature 0.829 [0.815, 0.844]  mc_dropout 0.856 [0.843, 0.868]  ensemble 0.809 [0.795, 0.824]
+gaussian_noise  s2  AUROC softmax 0.777 [0.762, 0.792]  temperature 0.779 [0.764, 0.793]  mc_dropout 0.815 [0.803, 0.828]  ensemble 0.746 [0.732, 0.760]
+gaussian_noise  s3  AUROC softmax 0.728 [0.714, 0.742]  temperature 0.731 [0.717, 0.745]  mc_dropout 0.765 [0.753, 0.778]  ensemble 0.703 [0.689, 0.717]
+gaussian_noise  s4  AUROC softmax 0.740 [0.725, 0.755]  temperature 0.744 [0.729, 0.759]  mc_dropout 0.760 [0.746, 0.774]  ensemble 0.719 [0.701, 0.734]
+gaussian_noise  s5  AUROC softmax 0.769 [0.752, 0.784]  temperature 0.773 [0.757, 0.788]  mc_dropout 0.770 [0.755, 0.785]  ensemble 0.688 [0.672, 0.704]
+gaussian_blur   s0  AUROC softmax 0.924 [0.910, 0.936]  temperature 0.924 [0.910, 0.936]  mc_dropout 0.917 [0.899, 0.931]  ensemble 0.924 [0.911, 0.937]
+gaussian_blur   s1  AUROC softmax 0.812 [0.795, 0.827]  temperature 0.810 [0.794, 0.826]  mc_dropout 0.807 [0.790, 0.825]  ensemble 0.807 [0.792, 0.821]
+gaussian_blur   s2  AUROC softmax 0.752 [0.736, 0.766]  temperature 0.751 [0.735, 0.765]  mc_dropout 0.736 [0.720, 0.750]  ensemble 0.766 [0.752, 0.780]
+gaussian_blur   s3  AUROC softmax 0.711 [0.695, 0.724]  temperature 0.710 [0.694, 0.723]  mc_dropout 0.702 [0.685, 0.717]  ensemble 0.749 [0.735, 0.764]
+gaussian_blur   s4  AUROC softmax 0.603 [0.587, 0.618]  temperature 0.602 [0.586, 0.617]  mc_dropout 0.601 [0.585, 0.617]  ensemble 0.684 [0.668, 0.700]
+gaussian_blur   s5  AUROC softmax 0.610 [0.593, 0.627]  temperature 0.611 [0.594, 0.627]  mc_dropout 0.604 [0.588, 0.620]  ensemble 0.710 [0.694, 0.724]
+contrast        s0  AUROC softmax 0.924 [0.910, 0.936]  temperature 0.924 [0.910, 0.936]  mc_dropout 0.911 [0.895, 0.926]  ensemble 0.924 [0.911, 0.937]
+contrast        s1  AUROC softmax 0.829 [0.816, 0.841]  temperature 0.831 [0.819, 0.843]  mc_dropout 0.817 [0.804, 0.830]  ensemble 0.877 [0.866, 0.887]
+contrast        s2  AUROC softmax 0.795 [0.783, 0.808]  temperature 0.798 [0.786, 0.810]  mc_dropout 0.781 [0.767, 0.794]  ensemble 0.814 [0.802, 0.827]
+contrast        s3  AUROC softmax 0.666 [0.652, 0.681]  temperature 0.664 [0.651, 0.679]  mc_dropout 0.631 [0.617, 0.647]  ensemble 0.771 [0.758, 0.785]
+contrast        s4  AUROC softmax 0.630 [0.614, 0.648]  temperature 0.632 [0.616, 0.649]  mc_dropout 0.598 [0.584, 0.614]  ensemble 0.713 [0.698, 0.728]
+contrast        s5  AUROC softmax 0.590 [0.573, 0.609]  temperature 0.590 [0.573, 0.609]  mc_dropout 0.616 [0.599, 0.632]  ensemble 0.632 [0.615, 0.648]
+stain_shift     s0  AUROC softmax 0.924 [0.910, 0.936]  temperature 0.924 [0.910, 0.936]  mc_dropout 0.910 [0.892, 0.925]  ensemble 0.924 [0.911, 0.937]
+stain_shift     s1  AUROC softmax 0.831 [0.817, 0.845]  temperature 0.832 [0.817, 0.845]  mc_dropout 0.852 [0.838, 0.865]  ensemble 0.837 [0.823, 0.850]
+stain_shift     s2  AUROC softmax 0.756 [0.741, 0.771]  temperature 0.758 [0.743, 0.772]  mc_dropout 0.787 [0.774, 0.800]  ensemble 0.772 [0.757, 0.786]
+stain_shift     s3  AUROC softmax 0.691 [0.676, 0.706]  temperature 0.692 [0.677, 0.707]  mc_dropout 0.711 [0.695, 0.725]  ensemble 0.719 [0.704, 0.735]
+stain_shift     s4  AUROC softmax 0.659 [0.643, 0.673]  temperature 0.659 [0.644, 0.674]  mc_dropout 0.674 [0.659, 0.689]  ensemble 0.676 [0.660, 0.692]
+stain_shift     s5  AUROC softmax 0.643 [0.627, 0.660]  temperature 0.643 [0.627, 0.660]  mc_dropout 0.648 [0.633, 0.664]  ensemble 0.627 [0.610, 0.645]
+
+Paired differences across 20 shifted conditions (real = 95% CI excludes 0 and |diff| >= 0.01):
+  softmax vs temperature
+    auroc     softmax better  0 | temperature better  0 | negligible 14 | indistinguishable  6
+    ece       softmax better  0 | temperature better 20 | negligible  0 | indistinguishable  0
+    aurc      softmax better  0 | temperature better  0 | negligible 12 | indistinguishable  8
+    accuracy  softmax better  0 | temperature better  0 | negligible  0 | indistinguishable 20
+  softmax vs mc_dropout
+    auroc     softmax better  5 | mc_dropout better  9 | negligible  0 | indistinguishable  6
+    ece       softmax better  0 | mc_dropout better 18 | negligible  1 | indistinguishable  1
+    aurc      softmax better  6 | mc_dropout better 11 | negligible  0 | indistinguishable  3
+    accuracy  softmax better  3 | mc_dropout better 12 | negligible  2 | indistinguishable  3
+  softmax vs ensemble
+    auroc     softmax better  5 | ensemble better 12 | negligible  0 | indistinguishable  3
+    ece       softmax better  2 | ensemble better 17 | negligible  0 | indistinguishable  1
+    aurc      softmax better  8 | ensemble better  9 | negligible  0 | indistinguishable  3
+    accuracy  softmax better 11 | ensemble better  3 | negligible  1 | indistinguishable  5
+  temperature vs mc_dropout
+    auroc     temperature better  5 | mc_dropout better  9 | negligible  0 | indistinguishable  6
+    ece       temperature better  3 | mc_dropout better 12 | negligible  0 | indistinguishable  5
+    aurc      temperature better  6 | mc_dropout better 11 | negligible  1 | indistinguishable  2
+    accuracy  temperature better  3 | mc_dropout better 12 | negligible  2 | indistinguishable  3
+  temperature vs ensemble
+    auroc     temperature better  5 | ensemble better 11 | negligible  0 | indistinguishable  4
+    ece       temperature better  3 | ensemble better 15 | negligible  0 | indistinguishable  2
+    aurc      temperature better  8 | ensemble better  8 | negligible  1 | indistinguishable  3
+    accuracy  temperature better 11 | ensemble better  3 | negligible  1 | indistinguishable  5
+  mc_dropout vs ensemble
+    auroc     mc_dropout better  8 | ensemble better  8 | negligible  0 | indistinguishable  4
+    ece       mc_dropout better  9 | ensemble better  9 | negligible  0 | indistinguishable  2
+    aurc      mc_dropout better 12 | ensemble better  7 | negligible  0 | indistinguishable  1
+    accuracy  mc_dropout better 14 | ensemble better  4 | negligible  1 | indistinguishable  1
+
+Clean data (AUROC):
+  softmax_minus_temperature           -0.0000  not distinguishable
+  softmax_minus_mc_dropout            +0.0122  real
+  softmax_minus_ensemble              +0.0001  not distinguishable
+  temperature_minus_mc_dropout        +0.0123  real
+  temperature_minus_ensemble          +0.0001  not distinguishable
+  mc_dropout_minus_ensemble           -0.0122  not distinguishable
+
+Done in 138s
+Metrics -> /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/metrics/bootstrap_ci.json

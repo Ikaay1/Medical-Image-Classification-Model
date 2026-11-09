@@ -1,0 +1,39 @@
+Methods: ['softmax', 'temperature', 'mc_dropout', 'ensemble']
+Scoring on 4,680 held-out test images (2,500 excluded as severity-calibration data)
+
+gaussian_noise:
+  s0        clean | AUROC softmax 0.9244 temperature 0.9245 mc_dropout 0.9122 ensemble 0.9244 | ECE softmax 0.035 temperature 0.026 mc_dropout 0.021 ensemble 0.020
+  s1   sigma=0.02 | AUROC softmax 0.8283 temperature 0.8288 mc_dropout 0.8560 ensemble 0.8091 | ECE softmax 0.115 temperature 0.095 mc_dropout 0.050 ensemble 0.090
+  s2  sigma=0.025 | AUROC softmax 0.7769 temperature 0.7788 mc_dropout 0.8153 ensemble 0.7458 | ECE softmax 0.192 temperature 0.164 mc_dropout 0.116 ensemble 0.157
+  s3   sigma=0.03 | AUROC softmax 0.7279 temperature 0.7310 mc_dropout 0.7655 ensemble 0.7031 | ECE softmax 0.314 temperature 0.281 mc_dropout 0.212 ensemble 0.260
+  s4  sigma=0.035 | AUROC softmax 0.7400 temperature 0.7440 mc_dropout 0.7602 ensemble 0.7186 | ECE softmax 0.460 temperature 0.426 mc_dropout 0.336 ensemble 0.387
+  s5   sigma=0.04 | AUROC softmax 0.7685 temperature 0.7728 mc_dropout 0.7698 ensemble 0.6882 | ECE softmax 0.556 temperature 0.522 mc_dropout 0.441 ensemble 0.468
+
+gaussian_blur:
+  s0        clean | AUROC softmax 0.9244 temperature 0.9245 mc_dropout 0.9165 ensemble 0.9244 | ECE softmax 0.035 temperature 0.026 mc_dropout 0.021 ensemble 0.020
+  s1    sigma=0.6 | AUROC softmax 0.8116 temperature 0.8103 mc_dropout 0.8074 ensemble 0.8071 | ECE softmax 0.112 temperature 0.090 mc_dropout 0.084 ensemble 0.118
+  s2    sigma=0.8 | AUROC softmax 0.7522 temperature 0.7513 mc_dropout 0.7355 ensemble 0.7660 | ECE softmax 0.195 temperature 0.165 mc_dropout 0.178 ensemble 0.240
+  s3    sigma=0.9 | AUROC softmax 0.7107 temperature 0.7096 mc_dropout 0.7015 ensemble 0.7493 | ECE softmax 0.260 temperature 0.226 mc_dropout 0.228 ensemble 0.275
+  s4    sigma=1.2 | AUROC softmax 0.6030 temperature 0.6021 mc_dropout 0.6009 ensemble 0.6841 | ECE softmax 0.355 temperature 0.318 mc_dropout 0.290 ensemble 0.292
+  s5    sigma=1.6 | AUROC softmax 0.6100 temperature 0.6106 mc_dropout 0.6044 ensemble 0.7100 | ECE softmax 0.481 temperature 0.440 mc_dropout 0.405 ensemble 0.407
+
+contrast:
+  s0        clean | AUROC softmax 0.9244 temperature 0.9245 mc_dropout 0.9112 ensemble 0.9244 | ECE softmax 0.035 temperature 0.026 mc_dropout 0.020 ensemble 0.020
+  s1  factor=0.85 | AUROC softmax 0.8286 temperature 0.8310 mc_dropout 0.8169 ensemble 0.8767 | ECE softmax 0.157 temperature 0.135 mc_dropout 0.130 ensemble 0.115
+  s2   factor=0.8 | AUROC softmax 0.7951 temperature 0.7977 mc_dropout 0.7806 ensemble 0.8144 | ECE softmax 0.208 temperature 0.181 mc_dropout 0.202 ensemble 0.120
+  s3   factor=0.7 | AUROC softmax 0.6658 temperature 0.6641 mc_dropout 0.6312 ensemble 0.7715 | ECE softmax 0.276 temperature 0.235 mc_dropout 0.267 ensemble 0.136
+  s4  factor=0.65 | AUROC softmax 0.6302 temperature 0.6318 mc_dropout 0.5978 ensemble 0.7128 | ECE softmax 0.379 temperature 0.330 mc_dropout 0.327 ensemble 0.115
+  s5   factor=0.6 | AUROC softmax 0.5899 temperature 0.5899 mc_dropout 0.6160 ensemble 0.6323 | ECE softmax 0.492 temperature 0.436 mc_dropout 0.417 ensemble 0.130
+
+stain_shift:
+  s0        clean | AUROC softmax 0.9244 temperature 0.9245 mc_dropout 0.9096 ensemble 0.9244 | ECE softmax 0.035 temperature 0.026 mc_dropout 0.019 ensemble 0.020
+  s1    sigma=0.3 | AUROC softmax 0.8315 temperature 0.8317 mc_dropout 0.8523 ensemble 0.8373 | ECE softmax 0.119 temperature 0.103 mc_dropout 0.074 ensemble 0.084
+  s2    sigma=0.5 | AUROC softmax 0.7562 temperature 0.7578 mc_dropout 0.7873 ensemble 0.7716 | ECE softmax 0.230 temperature 0.210 mc_dropout 0.183 ensemble 0.164
+  s3    sigma=0.7 | AUROC softmax 0.6911 temperature 0.6923 mc_dropout 0.7106 ensemble 0.7192 | ECE softmax 0.324 temperature 0.300 mc_dropout 0.271 ensemble 0.245
+  s4      sigma=1 | AUROC softmax 0.6590 temperature 0.6593 mc_dropout 0.6741 ensemble 0.6763 | ECE softmax 0.429 temperature 0.400 mc_dropout 0.383 ensemble 0.338
+  s5    sigma=1.4 | AUROC softmax 0.6428 temperature 0.6432 mc_dropout 0.6482 ensemble 0.6272 | ECE softmax 0.520 temperature 0.486 mc_dropout 0.481 ensemble 0.406
+
+Temperature scaling vs softmax AUROC: max difference 0.00426, mean 0.00128
+
+Metrics -> /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/metrics/detection_evaluation.json
+Figures -> /Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/outputs/figures

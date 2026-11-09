@@ -94,6 +94,52 @@ def contrast(images: np.ndarray, factor: float, seed: int | None = None) -> np.n
     return np.clip(adjusted, 0.0, 1.0).astype(np.float32)
 
 
+# Stain vectors for haematoxylin, eosin and a residual (DAB) channel, from
+# Ruifrok & Johnston (2001) -- the same matrix scikit-image uses for rgb2hed.
+# Each row is the RGB optical-density signature of one stain.
+_RGB_FROM_HED = np.array([[0.65, 0.70, 0.29],
+                          [0.07, 0.99, 0.11],
+                          [0.27, 0.57, 0.78]])
+_HED_FROM_RGB = np.linalg.inv(_RGB_FROM_HED)
+_LOG_ADJUST = np.log(1e-6)
+
+
+def stain_shift(images: np.ndarray, sigma: float, seed: int) -> np.ndarray:
+    """Change how much haematoxylin and eosin each slide appears to have taken up.
+
+    Weeks 10-12 addition. Noise, blur and contrast are generic image
+    corruptions; this one is specific to histology. The same tissue stained in
+    two labs, or on two days, comes out a different shade of purple and pink,
+    and that variation is the best-documented source of distribution shift in
+    computational pathology.
+
+    Method (stain separation, then rescaling):
+      1. RGB -> optical density. By the Beer-Lambert law optical density is
+         proportional to the amount of dye, so dye amounts become additive.
+      2. Optical density -> haematoxylin / eosin / residual concentrations,
+         using the fixed stain matrix above.
+      3. Multiply each image's haematoxylin and eosin by its own random factor
+         exp(U(-sigma, sigma)): a slide that took up more or less of each dye.
+      4. Convert back to RGB.
+
+    Unstained background has zero optical density, so it stays white whatever
+    the factor -- as it would on a real slide. With sigma=0 the round trip is
+    exact. The residual channel is left alone because H&E slides carry no DAB.
+    """
+    if sigma <= 0:
+        return images.astype(np.float32, copy=True)
+
+    rng = np.random.default_rng(seed)
+    od = np.log(np.maximum(images.astype(np.float64), 1e-6)) / _LOG_ADJUST
+    hed = od @ _HED_FROM_RGB
+
+    factors = np.exp(rng.uniform(-sigma, sigma, size=(len(images), 1, 1, 2)))
+    hed[..., :2] *= factors
+
+    rgb = np.exp((hed @ _RGB_FROM_HED) * _LOG_ADJUST)
+    return np.clip(rgb, 0.0, 1.0).astype(np.float32)
+
+
 # --------------------------------------------------------------------------
 # Registry
 # --------------------------------------------------------------------------
@@ -105,6 +151,7 @@ CORRUPTIONS: dict[str, tuple[Callable[..., np.ndarray], str]] = {
     "gaussian_noise": (gaussian_noise, "sigma"),
     "gaussian_blur": (gaussian_blur, "sigma"),
     "contrast": (contrast, "factor"),
+    "stain_shift": (stain_shift, "sigma"),
 }
 
 

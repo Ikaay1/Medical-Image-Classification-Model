@@ -49,12 +49,25 @@ METHOD_LABELS = {
     "softmax": "softmax confidence",
     "temperature": "temperature scaling",
     "mc_dropout": "MC Dropout",
+    "ensemble": "deep ensemble",
 }
-METHOD_COLORS = {"softmax": "#3b6ea5", "temperature": "#d08b2c", "mc_dropout": "#4f9153"}
+METHOD_COLORS = {"softmax": "#3b6ea5", "temperature": "#d08b2c", "mc_dropout": "#4f9153",
+                 "ensemble": "#8d5fa8"}
 SCORE_COLORS = {"max_prob": "#3b6ea5", "entropy": "#d08b2c",
                 "margin": "#8d5fa8", "mutual_info": "#4f9153"}
 COVERAGES = (0.5, 0.7, 0.8, 0.9, 1.0)
 N_BINS = 15
+METHODS = list(config.UNCERTAINTY_METHODS)   # replaced in main() by what is on disk
+
+
+def available_methods() -> list[str]:
+    """Every method whose predictions are on disk, in config order.
+
+    The ensemble is only present once evaluate_ensemble.py has run, so the
+    Milestone 4 results still reproduce without it.
+    """
+    return [m for m in config.DETECTION_METHODS
+            if (config.UNCERTAINTY_DIR / f"{m}_gaussian_noise_s0.npz").exists()]
 
 
 def load(method: str, corruption: str, severity: int):
@@ -94,6 +107,10 @@ def score_condition(probs, labels, mi, keep_bins: bool) -> dict:
 
 
 def main() -> None:
+    global METHODS
+    METHODS = available_methods()
+    print(f"Methods: {METHODS}")
+
     # Held-out split: the test images not used to choose severity levels.
     probs0, labels0, _ = load("softmax", "gaussian_noise", 0)
     n_test = len(labels0)
@@ -112,7 +129,7 @@ def main() -> None:
             # keep reliability bins only where a diagram is drawn
             keep = severity in (0, config.NUM_SEVERITIES)
 
-            for method in config.UNCERTAINTY_METHODS:
+            for method in METHODS:
                 probs, labels, mi = load(method, corruption, severity)
                 row["methods"][method] = {
                     "heldout": score_condition(
@@ -123,13 +140,9 @@ def main() -> None:
 
             m = row["methods"]
             print(f"  s{severity} {row['parameter']:>12s} | AUROC "
-                  f"soft {m['softmax']['heldout']['auroc']['max_prob']:.4f} "
-                  f"temp {m['temperature']['heldout']['auroc']['max_prob']:.4f} "
-                  f"mc {m['mc_dropout']['heldout']['auroc']['max_prob']:.4f} "
-                  f"mc-MI {m['mc_dropout']['heldout']['auroc']['mutual_info']:.4f} | ECE "
-                  f"soft {m['softmax']['heldout']['ece']:.3f} "
-                  f"temp {m['temperature']['heldout']['ece']:.3f} "
-                  f"mc {m['mc_dropout']['heldout']['ece']:.3f}")
+                  + " ".join(f"{k} {m[k]['heldout']['auroc']['max_prob']:.4f}" for k in METHODS)
+                  + " | ECE "
+                  + " ".join(f"{k} {m[k]['heldout']['ece']:.3f}" for k in METHODS))
             results.append(row)
         print()
 
@@ -168,7 +181,7 @@ def _rows(results, corruption):
 
 
 def plot_auroc(results, path) -> None:
-    fig, axes = plt.subplots(1, 3, figsize=(14, 4.2), sharey=True)
+    fig, axes = plt.subplots(1, len(degradations.CORRUPTIONS), figsize=(4.7 * len(degradations.CORRUPTIONS), 4.2), sharey=True)
     for ax, corruption in zip(axes, degradations.CORRUPTIONS):
         rows = _rows(results, corruption)
         sev = [r["severity"] for r in rows]
@@ -177,8 +190,9 @@ def plot_auroc(results, path) -> None:
         # and a thin line hidden underneath would read as a missing series.
         styles = {"softmax": dict(lw=4.5, alpha=0.45, marker="o", ms=9, ls="-"),
                   "temperature": dict(lw=1.6, marker="o", ms=4, ls="--"),
-                  "mc_dropout": dict(lw=1.8, marker="o", ms=5, ls="-")}
-        for method in config.UNCERTAINTY_METHODS:
+                  "mc_dropout": dict(lw=1.8, marker="o", ms=5, ls="-"),
+                  "ensemble": dict(lw=1.8, marker="s", ms=5, ls="-")}
+        for method in METHODS:
             y = [r["methods"][method]["heldout"]["auroc"]["max_prob"] for r in rows]
             ax.plot(sev, y, color=METHOD_COLORS[method],
                     label=METHOD_LABELS[method], **styles[method])
@@ -198,11 +212,11 @@ def plot_auroc(results, path) -> None:
 
 
 def plot_calibration(results, path) -> None:
-    fig, axes = plt.subplots(1, 3, figsize=(14, 4.2), sharey=True)
+    fig, axes = plt.subplots(1, len(degradations.CORRUPTIONS), figsize=(4.7 * len(degradations.CORRUPTIONS), 4.2), sharey=True)
     for ax, corruption in zip(axes, degradations.CORRUPTIONS):
         rows = _rows(results, corruption)
         sev = [r["severity"] for r in rows]
-        for method in config.UNCERTAINTY_METHODS:
+        for method in METHODS:
             y = [r["methods"][method]["heldout"]["ece"] for r in rows]
             ax.plot(sev, y, "o-", color=METHOD_COLORS[method], label=METHOD_LABELS[method])
         ax.set_title(corruption.replace("_", " "))
@@ -221,11 +235,11 @@ def plot_reliability(results, path) -> None:
     """Reliability diagrams on clean data and at the worst noise severity."""
     conds = [("gaussian_noise", 0, "clean"),
              ("gaussian_noise", config.NUM_SEVERITIES, "noise severity 5")]
-    fig, axes = plt.subplots(2, 3, figsize=(13, 8))
+    fig, axes = plt.subplots(2, len(METHODS), figsize=(4.4 * len(METHODS), 8))
 
     for r_i, (corruption, sev, title) in enumerate(conds):
         row = next(r for r in _rows(results, corruption) if r["severity"] == sev)
-        for c_i, method in enumerate(config.UNCERTAINTY_METHODS):
+        for c_i, method in enumerate(METHODS):
             ax = axes[r_i, c_i]
             d = row["methods"][method]["heldout"]
             bins = d["reliability_bins"]
@@ -258,26 +272,44 @@ def plot_reliability(results, path) -> None:
 
 def plot_risk_coverage(heldout, path) -> None:
     """Risk-coverage curves: what abstention buys you, clean vs degraded."""
-    conds = [("gaussian_noise", 0, "clean"),
-             ("gaussian_noise", 3, "noise severity 3"),
-             ("gaussian_noise", config.NUM_SEVERITIES, "noise severity 5")]
-    fig, axes = plt.subplots(1, 3, figsize=(14, 4.2))
+    # Clean, then every corruption at full strength. They fail in different
+    # shapes. Blur is the extreme: its most confident 5% of predictions are all
+    # wrong, because heavy blur turns mucus into something the model calls
+    # "background" with confidence indistinguishable from 1. (Checked against
+    # float32 ties: ranking by logit margin, which does not saturate, gives the
+    # same result.)
+    conds = [("gaussian_noise", 0, "clean")] + [
+        (c, config.NUM_SEVERITIES, f"{c.replace('_', ' ')} severity {config.NUM_SEVERITIES}")
+        for c in degradations.CORRUPTIONS]
+    fig, axes = plt.subplots(1, len(conds), figsize=(4.2 * len(conds), 4.2))
 
     for ax, (corruption, sev, title) in zip(axes, conds):
-        for method in config.UNCERTAINTY_METHODS:
+        top = 0.0
+        for method in METHODS:
             probs, labels, mi = load(method, corruption, sev)
             probs, labels = probs[heldout], labels[heldout]
             correct = probs.argmax(1) == labels
             cov, risk = M.risk_coverage_curve(-probs.max(1), correct)
+            # Scale the axis from 2% coverage on: below that, risk is an error
+            # rate over a handful of images and spikes toward 1.0, which would
+            # flatten the part of the curve that matters.
+            top = max(top, risk[cov >= 0.02].max())
             ax.plot(cov, risk, color=METHOD_COLORS[method], lw=1.6,
                     label=f"{METHOD_LABELS[method]} (AURC {M.aurc(-probs.max(1), correct):.3f})")
+        for c in (0.5, 0.8):
+            ax.axvline(c, ls=":", lw=1, color="grey")
+            # Labelled along the bottom: the legend sits top-left, so anchoring
+            # these to the top of the axes clips them behind it.
+            ax.annotate(f"keep {int(c*100)}%", xy=(c, 0), xycoords=("data", "axes fraction"),
+                        xytext=(3, 4), textcoords="offset points",
+                        fontsize=7, color="grey", va="bottom")
         ax.set_title(title)
         ax.set_xlabel("coverage (fraction of predictions kept)")
-        ax.set_ylim(bottom=0)
+        ax.set_ylim(0, top * 1.08)
         ax.grid(alpha=0.3)
         ax.legend(fontsize=7, loc="upper left")
     axes[0].set_ylabel("risk (error rate among kept)")
-    fig.suptitle("If the model abstains on its least confident cases, how much does risk fall?")
+    fig.suptitle("If the model abstains on its least confident cases, how much does the error rate fall?\nOn clean images abstention works; under blur the model's most confident predictions are its wrong ones (risk starts near 1)", fontsize=11)
     fig.tight_layout()
     fig.savefig(path, dpi=150)
     plt.close(fig)
@@ -285,7 +317,7 @@ def plot_risk_coverage(heldout, path) -> None:
 
 def plot_score_comparison(results, path) -> None:
     """Which uncertainty score detects errors best, within a single method?"""
-    fig, axes = plt.subplots(1, 3, figsize=(14, 4.2), sharey=True)
+    fig, axes = plt.subplots(1, len(degradations.CORRUPTIONS), figsize=(4.7 * len(degradations.CORRUPTIONS), 4.2), sharey=True)
     for ax, corruption in zip(axes, degradations.CORRUPTIONS):
         rows = _rows(results, corruption)
         sev = [r["severity"] for r in rows]

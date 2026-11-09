@@ -22,6 +22,7 @@ Outputs:
 
 from __future__ import annotations
 
+import argparse
 import json
 
 import matplotlib
@@ -48,6 +49,10 @@ SWEEP_GRIDS = {
                       1.2, 1.4, 1.6, 2.0, 3.0],
     "contrast": [1.0, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65, 0.6, 0.55,
                  0.5, 0.45, 0.4, 0.3, 0.2],
+    # Added Weeks 10-12. sigma bounds the log of the per-slide dye factor, so
+    # 1.0 lets a slide carry anywhere from 0.37x to 2.7x the usual stain.
+    "stain_shift": [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0,
+                    1.2, 1.4, 1.7, 2.0, 2.5, 3.0],
 }
 
 # Subsample size for the sweep. The full test set is used later for the real
@@ -115,6 +120,12 @@ def pick_levels(values: list[float], accs: list[float], clean_acc: float) -> lis
 
 
 def main() -> None:
+    p = argparse.ArgumentParser(description="Calibrate corruption severity levels.")
+    p.add_argument("--only", nargs="+", choices=list(SWEEP_GRIDS),
+                   help="Sweep only these corruptions and merge them into the "
+                        "existing calibration file, leaving the others as they are.")
+    args = p.parse_args()
+
     if not config.BEST_MODEL_PATH.exists():
         raise SystemExit(f"No trained model at {config.BEST_MODEL_PATH}. Run: python -m src.train")
 
@@ -125,8 +136,14 @@ def main() -> None:
     images, labels = images[idx], labels[idx]
     print(f"Calibrating on {len(labels):,} test images (floor = {ACCURACY_FLOOR:.2f})\n")
 
+    out = config.METRIC_DIR / "severity_calibration.json"
     results: dict[str, dict] = {}
+    if args.only and out.exists():
+        results = json.loads(out.read_text())["results"]
+
     for name, grid in SWEEP_GRIDS.items():
+        if args.only and name not in args.only:
+            continue
         accs = []
         print(f"{name}:")
         for value in grid:
@@ -148,7 +165,6 @@ def main() -> None:
         print(f"  chosen levels : {chosen}")
         print(f"  -> accuracies : {[round(a, 4) for a in chosen_accs]}\n")
 
-    out = config.METRIC_DIR / "severity_calibration.json"
     out.write_text(
         json.dumps(
             {
@@ -162,7 +178,7 @@ def main() -> None:
     )
 
     # ---- figure ------------------------------------------------------
-    fig, axes = plt.subplots(1, 3, figsize=(14, 4))
+    fig, axes = plt.subplots(1, len(results), figsize=(4.7 * len(results), 4))
     for ax, (name, res) in zip(axes, results.items()):
         ax.plot(res["grid"], res["accuracies"], "o-", color="#3b6ea5", label="sweep")
         ax.plot(

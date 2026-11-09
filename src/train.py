@@ -41,6 +41,12 @@ def parse_args() -> argparse.Namespace:
         help="Train on only the first N training images (for quick tests).",
     )
     p.add_argument("--seed", type=int, default=config.SEED)
+    p.add_argument(
+        "--name",
+        default=config.BASELINE_MODEL_NAME,
+        help="Artifact name. Ensemble members use their own name so they never "
+        "overwrite the baseline (see config.ENSEMBLE_MEMBERS).",
+    )
     return p.parse_args()
 
 
@@ -75,6 +81,13 @@ def main() -> None:
     args = parse_args()
     keras.utils.set_random_seed(args.seed)
 
+    model_path = config.MODEL_DIR / f"{args.name}.keras"
+    history_path = config.METRIC_DIR / f"{args.name}_history.json"
+    curves_path = config.FIGURE_DIR / (
+        "training_curves.png" if args.name == config.BASELINE_MODEL_NAME
+        else f"training_curves_{args.name}.png"
+    )
+
     devices = [d.device_type for d in tf.config.list_physical_devices()]
     print(f"TensorFlow {tf.__version__} | devices: {devices}")
 
@@ -100,7 +113,7 @@ def main() -> None:
 
     callbacks = [
         keras.callbacks.ModelCheckpoint(
-            filepath=str(config.BEST_MODEL_PATH),
+            filepath=str(model_path),
             monitor="val_loss",
             save_best_only=True,
             verbose=1,
@@ -149,9 +162,9 @@ def main() -> None:
             "augmentation": config.USE_AUGMENTATION,
         },
     }
-    config.HISTORY_PATH.write_text(json.dumps(record, indent=2))
+    history_path.write_text(json.dumps(record, indent=2))
 
-    plot_history(hist, config.FIGURE_DIR / "training_curves.png")
+    plot_history(hist, curves_path)
 
     print(
         f"\nDone in {elapsed / 60:.1f} min. "
@@ -159,8 +172,8 @@ def main() -> None:
         f"val_loss={record['best_val_loss']:.4f} "
         f"val_accuracy={record['best_val_accuracy']:.4f}"
     )
-    print(f"Model   -> {config.BEST_MODEL_PATH}")
-    print(f"History -> {config.HISTORY_PATH}")
+    print(f"Model   -> {model_path}")
+    print(f"History -> {history_path}")
 
 
 if __name__ == "__main__":

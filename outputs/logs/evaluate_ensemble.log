@@ -1,0 +1,51 @@
+2026-11-08 16:33:29.986613: I metal_plugin/src/device/metal_device.cc:1154] Metal device set to: Apple M4
+2026-11-08 16:33:29.986696: I metal_plugin/src/device/metal_device.cc:296] systemMemory: 24.00 GB
+2026-11-08 16:33:29.986706: I metal_plugin/src/device/metal_device.cc:313] maxCacheSize: 8.00 GB
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1794177209.986944 12850509 pluggable_device_factory.cc:305] Could not identify NUMA node of platform GPU ID 0, defaulting to 0. Your kernel may not have been built with NUMA support.
+I0000 00:00:1794177209.987129 12850509 pluggable_device_factory.cc:271] Created TensorFlow device (/job:localhost/replica:0/task:0/device:GPU:0 with 0 MB memory) -> physical PluggableDevice (device: 0, name: METAL, pci bus id: <undefined>)
+2026-11-08 16:33:31.372253: I tensorflow/core/grappler/optimizers/custom_graph_optimizer_registry.cc:117] Plugin optimizer for device_type GPU is enabled.
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/src/evaluate_ensemble.py", line 239, in <module>
+    main()
+  File "/Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/src/evaluate_ensemble.py", line 177, in main
+    plot_size(results, config.FIGURE_DIR / "ensemble_size.png")
+  File "/Users/ikechukwumgbemele/Documents/ToMove/Fisk University/6th Semester/Senior Seminar 1/SS1 Project/src/evaluate_ensemble.py", line 219, in plot_size
+    if sev == 0 and corruption != degradations.CORRUPTIONS[0]:
+                                  ~~~~~~~~~~~~~~~~~~~~~~~~^^^
+KeyError: 0
+Members (5): ['baseline_cnn', 'ensemble_seed43', 'ensemble_seed44', 'ensemble_seed45', 'ensemble_seed46']
+gaussian_noise:
+  s0        clean | ensemble acc 0.931 AUROC 0.9244 ECE 0.020 | members acc 0.908-0.934 AUROC 0.8771-0.9244
+  s1   sigma=0.02 | ensemble acc 0.785 AUROC 0.8091 ECE 0.090 | members acc 0.715-0.820 AUROC 0.7473-0.8283
+  s2  sigma=0.025 | ensemble acc 0.669 AUROC 0.7458 ECE 0.157 | members acc 0.596-0.714 AUROC 0.7086-0.7769
+  s3   sigma=0.03 | ensemble acc 0.518 AUROC 0.7031 ECE 0.260 | members acc 0.447-0.596 AUROC 0.6980-0.7381
+  s4  sigma=0.035 | ensemble acc 0.377 AUROC 0.7186 ECE 0.387 | members acc 0.338-0.466 AUROC 0.6915-0.7532
+  s5   sigma=0.04 | ensemble acc 0.303 AUROC 0.6882 ECE 0.468 | members acc 0.277-0.367 AUROC 0.6183-0.7685
+
+gaussian_blur:
+  s0        clean | ensemble acc 0.931 AUROC 0.9244 ECE 0.020 | members acc 0.908-0.934 AUROC 0.8771-0.9244
+  s1    sigma=0.6 | ensemble acc 0.767 AUROC 0.8071 ECE 0.118 | members acc 0.718-0.820 AUROC 0.7703-0.8116
+  s2    sigma=0.8 | ensemble acc 0.613 AUROC 0.7660 ECE 0.240 | members acc 0.571-0.698 AUROC 0.7153-0.7522
+  s3    sigma=0.9 | ensemble acc 0.566 AUROC 0.7493 ECE 0.275 | members acc 0.537-0.622 AUROC 0.6851-0.7149
+  s4    sigma=1.2 | ensemble acc 0.500 AUROC 0.6841 ECE 0.292 | members acc 0.451-0.502 AUROC 0.6030-0.6813
+  s5    sigma=1.6 | ensemble acc 0.356 AUROC 0.7100 ECE 0.407 | members acc 0.339-0.384 AUROC 0.5888-0.7048
+
+contrast:
+  s0        clean | ensemble acc 0.931 AUROC 0.9244 ECE 0.020 | members acc 0.908-0.934 AUROC 0.8771-0.9244
+  s1  factor=0.85 | ensemble acc 0.763 AUROC 0.8767 ECE 0.115 | members acc 0.700-0.796 AUROC 0.8097-0.8368
+  s2   factor=0.8 | ensemble acc 0.719 AUROC 0.8144 ECE 0.120 | members acc 0.631-0.734 AUROC 0.7666-0.8059
+  s3   factor=0.7 | ensemble acc 0.582 AUROC 0.7715 ECE 0.136 | members acc 0.491-0.657 AUROC 0.5757-0.7094
+  s4  factor=0.65 | ensemble acc 0.529 AUROC 0.7128 ECE 0.115 | members acc 0.432-0.583 AUROC 0.5364-0.6358
+  s5   factor=0.6 | ensemble acc 0.449 AUROC 0.6323 ECE 0.130 | members acc 0.327-0.427 AUROC 0.5051-0.6302
+
+stain_shift:
+  s0        clean | ensemble acc 0.931 AUROC 0.9244 ECE 0.020 | members acc 0.908-0.934 AUROC 0.8771-0.9244
+  s1    sigma=0.3 | ensemble acc 0.829 AUROC 0.8373 ECE 0.084 | members acc 0.797-0.834 AUROC 0.7882-0.8315
+  s2    sigma=0.5 | ensemble acc 0.710 AUROC 0.7716 ECE 0.164 | members acc 0.680-0.712 AUROC 0.7232-0.7632
+  s3    sigma=0.7 | ensemble acc 0.590 AUROC 0.7192 ECE 0.245 | members acc 0.561-0.598 AUROC 0.6805-0.7251
+  s4      sigma=1 | ensemble acc 0.458 AUROC 0.6763 ECE 0.338 | members acc 0.422-0.473 AUROC 0.6338-0.6685
+  s5    sigma=1.4 | ensemble acc 0.345 AUROC 0.6272 ECE 0.406 | members acc 0.303-0.357 AUROC 0.5728-0.6494
+
